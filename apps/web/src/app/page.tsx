@@ -21,19 +21,19 @@ export default function Home() {
         />
         <div className="section-shell relative z-10 grid min-h-[62svh] items-end gap-12 pb-16 md:pb-24 lg:grid-cols-[1.25fr_.75fr]">
           <div>
-            <p className="eyebrow hero-line text-white/70">Narrative arbitrage engine</p>
+            <p className="eyebrow hero-line text-white/70">Market intelligence, in plain English</p>
             <h1 className="h-display hero-line mt-6 max-w-5xl text-[clamp(3.4rem,8vw,7.5rem)] text-white">
-              Did the crowd
+              Is this stock story
               <br />
-              find it first — or
+              still early — or
               <br />
-              <span className="text-[#bfd2ff]">arrive too late?</span>
+              <span className="text-[#bfd2ff]">already priced in?</span>
             </h1>
           </div>
           <p className="hero-line max-w-xl border-t border-white/25 pt-6 text-base leading-7 text-white/70 lg:mb-3">
-            Every story reaches Reddit, the newswires and the tape at different moments. The distance
-            between those moments is the only edge worth measuring. Type a ticker and we will measure it
-            against live sources.
+            Search a company. APE Alpha checks what investors are saying, what reliable sources have
+            confirmed, and how the price has moved. Then it gives you a clear next step: watch, paper buy,
+            or stay away.
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export default function Home() {
                 <span className="text-sm text-white/55">{layer.claim}</span>
               </li>
             ))}
-            <li className="eyebrow ml-auto text-[var(--solar)]">Who knew first?</li>
+            <li className="eyebrow ml-auto text-[var(--solar)]">One search. One clear read.</li>
           </ul>
         </div>
       </section>
@@ -55,24 +55,24 @@ export default function Home() {
       <section className="section-rule">
         <div className="section-shell py-20 md:py-28">
           <SectionHeading
-            eyebrow="Why a gap is the signal"
-            title={<>Attention is easy to measure. Being early is not.</>}
-            sub="Mention counts spike constantly, and almost all of it is noise that follows a move rather than leading one. Standardizing each layer separately makes the lead or lag visible."
+            eyebrow="Why timing matters"
+            title={<>A popular story is not always an early one.</>}
+            sub="We compare investor conversation, confirmed news, and price action to show whether attention is leading the move or simply chasing it."
           />
 
           <div className="mt-16 grid gap-px border border-line bg-line md:grid-cols-3">
             {[
               {
-                title: "Whisper",
-                body: "Social runs ahead of news and price. The most valuable and the most dangerous state, because unconfirmed is also where false positives live.",
+                title: "Early signal",
+                body: "Investors are talking before news and price react. Interesting, but still unconfirmed.",
               },
               {
-                title: "Confirmed",
-                body: "A filing or independent reporting catches up while price has not yet absorbed it. This is the only shape the engine will size a paper position into.",
+                title: "Evidence building",
+                body: "A filing or independent report supports the story before price fully reacts. This can become a paper-buy setup.",
               },
               {
-                title: "Exit liquidity",
-                body: "Attention arrives after the move, agreement is near-total and mention growth is decaying. The engine refuses the long side here.",
+                title: "Too late",
+                body: "Price has already moved and attention is arriving afterward. APE Alpha flags the chase and tells you to stay out.",
               },
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 0.06} className="bg-white p-8 md:p-10">
@@ -88,20 +88,20 @@ export default function Home() {
       <section className="section-rule">
         <div className="section-shell grid gap-14 py-20 md:py-28 lg:grid-cols-[1fr_1fr] lg:gap-24">
           <Reveal>
-            <p className="eyebrow text-muted">Honest by construction</p>
+            <p className="eyebrow text-muted">Built for honest decisions</p>
             <h2 className="h-display mt-5 text-[clamp(2.4rem,4.5vw,4.2rem)]">
-              What this system
+              What APE Alpha
               <br />
-              will not do.
+              will never pretend.
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
             <ul className="m-0 grid list-none gap-6 border-t border-line-strong p-0 pt-8">
               {[
-                ["No live money", "There is no broker integration and no code path to one. Every position is paper, capped at 1% of NAV by a rule nothing downstream can raise."],
-                ["No invented history", "The social leg has no licensed archive, so it accrues forward from the moment you run it. Backfilled rows say so explicitly instead of scoring a zero."],
-                ["No look-ahead", "Entry is always the next bar's open. A signal can never fill on the bar that produced it."],
-                ["No hidden model", "The stance comes from published rules. The language layer writes prose about the numbers; it never chooses the position."],
+                ["Simulation only", "There is no broker connection. Every suggested position is a paper plan and can never exceed 1% of the test portfolio."],
+                ["No made-up history", "If past conversation data is unavailable, APE Alpha says so. Missing information is never presented as silence."],
+                ["No hindsight", "A test entry begins at the next market open, so a result never benefits from a price that was not known yet."],
+                ["Rules choose the action", "Published rules decide watch, paper buy, or stay away. AI only makes the measured evidence easier to read."],
               ].map(([title, body]) => (
                 <li key={title} className="border-b border-line pb-6">
                   <p className="text-[15px] font-bold text-ink">{title}</p>
@@ -110,7 +110,7 @@ export default function Home() {
               ))}
             </ul>
             <Link href={site.labHref} className="editorial-link mt-8 text-ink">
-              See the validation lab <span aria-hidden>→</span>
+              See how the rules performed <span aria-hidden>→</span>
             </Link>
           </Reveal>
         </div>

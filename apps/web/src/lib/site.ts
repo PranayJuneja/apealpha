@@ -9,10 +9,10 @@ export const site = {
 };
 
 export const nav = [
-  { label: "Research", href: "/research" },
-  { label: "Lab", href: "/lab" },
-  { label: "Sources", href: "/sources" },
-  { label: "Method", href: "/method" },
+  { label: "Check a stock", href: "/research" },
+  { label: "Track record", href: "/lab" },
+  { label: "Live sources", href: "/sources" },
+  { label: "How it works", href: "/method" },
 ];
 
 /** Listing venues the engine can research, with venue-appropriate examples. */
@@ -39,9 +39,9 @@ export const markets = [
 
 /** The three-layer model the whole product rests on. */
 export const truthLayers = [
-  { source: "Reddit", claim: "what the crowd believes" },
-  { source: "News", claim: "what the world knows" },
-  { source: "Price", claim: "what is already paid for" },
+  { source: "Reddit", claim: "what investors are noticing" },
+  { source: "News", claim: "what has been confirmed" },
+  { source: "Price", claim: "what the market already knows" },
 ];
 
 export const phaseCopy = {

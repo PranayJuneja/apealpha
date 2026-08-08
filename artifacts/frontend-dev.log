@@ -1,0 +1,31 @@
+
+> ape-alpha@0.2.0 dev
+> npm run dev --workspace @ape-alpha/web
+
+
+> @ape-alpha/web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.5.50.25:3000
+✓ Ready in 701ms
+✓ Running next.config.ts took 32ms
+
+ GET /research 200 in 923ms (next.js: 705ms, application-code: 218ms)
+ GET / 200 in 104ms (next.js: 42ms, application-code: 62ms)
+ GET /research 200 in 45ms (next.js: 9ms, application-code: 36ms)
+ POST /api/research 200 in 9.1s (next.js: 62ms, application-code: 9.0s)
+ GET / 200 in 55ms (next.js: 6ms, application-code: 48ms)
+ GET /research 200 in 41ms (next.js: 6ms, application-code: 36ms)
+ POST /api/research 200 in 12.7s (next.js: 4ms, application-code: 12.7s)
+ GET /research 200 in 35ms (next.js: 10ms, application-code: 25ms)
+✓ Compiled in 166ms
+ GET / 200 in 56ms (next.js: 10ms, application-code: 46ms)
+ GET /research 200 in 44ms (next.js: 5ms, application-code: 39ms)
+ POST /api/research 200 in 32.5s (next.js: 3ms, application-code: 32.5s)
+ GET /sources 200 in 934ms (next.js: 34ms, application-code: 901ms)
+ GET /lab 200 in 130ms (next.js: 31ms, application-code: 100ms)
+ GET / 200 in 47ms (next.js: 5ms, application-code: 41ms)
+ GET / 200 in 61ms (next.js: 9ms, application-code: 52ms)
+ GET / 200 in 47ms (next.js: 5ms, application-code: 42ms)

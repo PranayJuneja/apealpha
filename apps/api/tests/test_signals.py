@@ -102,7 +102,7 @@ def test_a_social_leg_that_is_not_live_can_never_produce_a_position(status: str)
     plan = build_playbook(features(news_z=1.5), NarrativePhase.CONFIRMED, coverage)
     assert plan.stance == "WATCH"
     assert plan.max_nav_pct == 0.0
-    assert "social leg is dark" in plan.rationale
+    assert "investor conversation data is unavailable" in plan.rationale.lower()
 
 
 def test_social_risks_are_suppressed_when_the_social_leg_is_dark() -> None:
@@ -141,7 +141,7 @@ def test_indeterminate_phase_has_no_confidence_and_no_position() -> None:
     plan = build_playbook(features(), NarrativePhase.INDETERMINATE, live_coverage())
     assert plan.stance == "WATCH"
     assert plan.max_nav_pct == 0.0
-    assert "cannot be measured" in plan.rationale
+    assert "cannot tell whether the crowd is early or late" in plan.rationale
 
 
 def test_an_unmeasured_social_leg_is_never_narrated_as_a_quiet_crowd() -> None:

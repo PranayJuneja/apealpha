@@ -3,8 +3,8 @@ import type { Playbook } from "@/types/research";
 import { StanceBadge } from "./phase-badge";
 
 const ROWS = [
-  { label: "Entry trigger", key: "entry_trigger" },
-  { label: "Invalidation", key: "invalidation" },
+  { label: "Buy only if", key: "entry_trigger" },
+  { label: "Walk away if", key: "invalidation" },
 ] as const;
 
 export function PlaybookCard({ playbook }: { playbook: Playbook }) {
@@ -13,7 +13,7 @@ export function PlaybookCard({ playbook }: { playbook: Playbook }) {
   return (
     <div className={`p-8 md:p-10 ${sized ? "glass-sun" : "glass"}`}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="eyebrow text-muted">Paper playbook</p>
+        <p className="eyebrow text-muted">What to do next</p>
         <StanceBadge stance={playbook.stance} />
       </div>
 
@@ -21,19 +21,19 @@ export function PlaybookCard({ playbook }: { playbook: Playbook }) {
 
       <dl className="mt-8 grid gap-6 border-t border-line-strong pt-6 sm:grid-cols-3">
         <div>
-          <dt className="eyebrow text-muted">Max size</dt>
+          <dt className="eyebrow text-muted">Position limit</dt>
           <dd className="stat-value mt-2">{sized ? percent(playbook.max_nav_pct, 2) : "—"}</dd>
-          <p className="mt-2 text-xs leading-5 text-muted">of NAV, capped at 1%</p>
+          <p className="mt-2 text-xs leading-5 text-muted">of the simulated portfolio</p>
         </div>
         <div>
-          <dt className="eyebrow text-muted">Time stop</dt>
+          <dt className="eyebrow text-muted">Review after</dt>
           <dd className="stat-value mt-2">{playbook.time_stop_hours > 0 ? `${playbook.time_stop_hours}h` : "—"}</dd>
           <p className="mt-2 text-xs leading-5 text-muted">{playbook.expected_holding_period}</p>
         </div>
         <div>
-          <dt className="eyebrow text-muted">Execution</dt>
-          <dd className="stat-value mt-2">Paper</dd>
-          <p className="mt-2 text-xs leading-5 text-muted">no broker path exists</p>
+          <dt className="eyebrow text-muted">Trade type</dt>
+          <dd className="stat-value mt-2">Simulation</dd>
+          <p className="mt-2 text-xs leading-5 text-muted">no real trade is placed</p>
         </div>
       </dl>
 

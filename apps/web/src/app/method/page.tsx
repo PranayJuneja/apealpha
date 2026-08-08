@@ -11,51 +11,51 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     number: "01",
-    title: "Resolve",
-    body: "The query is matched against the chosen market's listing universe — the SEC company-ticker file for the US, the NSE and BSE venue index for India. Symbols that collide with ordinary English — ALL, IT, ONE — require a cashtag. Historical symbol changes are applied so a 2021 observation is scored under the symbol it actually traded as.",
+    title: "Find the company",
+    body: "We match the name or ticker to the correct US or Indian listing. This prevents similar company names and common words from sending the search to the wrong stock.",
   },
   {
     number: "02",
-    title: "Acquire",
-    body: "Every query asks WebCMD to search the authorized X and Reddit sessions plus current Google News and Yahoo News. GDELT's historical baseline, the market's filing source and price bars are fetched concurrently under wall-clock budgets. A failure in one provider is isolated and recorded rather than converted to zero; duplicate headlines are counted once.",
+    title: "Gather live evidence",
+    body: "We check investor conversations, current news, company filings, and price data at the same time. Duplicate stories count once, and a missing source is clearly marked instead of treated as zero activity.",
   },
   {
     number: "03",
-    title: "Standardize",
-    body: "Each layer is converted to a robust z-score against its own recent history using median absolute deviation, so a normally quiet name and a permanently loud one are comparable. Only observations strictly before the evaluation point are used.",
+    title: "Compare with normal",
+    body: "Every stock has a different baseline. We compare today's activity with what is normal for that company, so a quiet stock and a famous stock can be judged fairly.",
   },
   {
     number: "04",
-    title: "Compare",
-    body: "The narrative gap is social minus news, and social minus price. A large positive gap means the crowd is ahead. A negative gap means it is following. That difference, not the raw volume, is the signal. Returns are always measured against the security's own market index — the S&P for US listings, the Nifty 50 for Indian ones.",
+    title: "See what moved first",
+    body: "We compare conversation, confirmed news, and price. If conversation leads, the story may be early. If price moved first, people may simply be chasing it. US results are compared with the S&P 500 and Indian results with the Nifty 50.",
   },
   {
     number: "05",
-    title: "Plan",
-    body: "A phase and rules-based playbook follow deterministically. GPT-5.6 Luna then returns the short narrative and a structured final read of sentiment, drivers and risks in one call. The model cannot change the phase, stance, entry conditions, invalidation, time stop or position cap.",
+    title: "Give the next step",
+    body: "Fixed rules choose watch, paper buy, or stay away. AI explains the evidence, sentiment, reasons, and risks in plain English, but it cannot change the action.",
   },
 ];
 
 const LIMITS = [
   [
-    "A dark source is not a quiet one",
-    "If the social leg does not report, its z-score is an unmeasured zero — which would read as 'nobody is talking' and invert the finding. The engine refuses to assign a phase at all in that case, shows the layer as unmeasured rather than as zero, and computes no gap.",
+    "Missing data does not mean silence",
+    "If investor conversation data is unavailable, APE Alpha will not assume nobody is talking. It marks the source as missing and does not make an early-or-late call.",
   ],
   [
-    "The social leg has no deep history",
-    "The connected X and Reddit surfaces do not provide the licensed deep archive required for point-in-time reconstruction. Historical rows use news and price only and are marked as such. Social observations accrue forward from the moment you start running the engine.",
+    "Past conversations are limited",
+    "The connected social sources do not provide a licensed long-term archive. Historical tests use news and price where conversation data is unavailable, and mark those rows clearly.",
   ],
   [
-    "Sentiment is a lexicon, not a model",
-    "Bullish share is still counted from an explicit word list so the signal remains reproducible. GPT-5.6 Luna adds a final interpretation, but it does not rewrite that metric and may still misunderstand sarcasm or coordinated posting.",
+    "Sentiment can miss tone",
+    "Positive and negative language is counted with a fixed word list so results are repeatable. Sarcasm and coordinated posting can still fool it, so sentiment is evidence—not proof.",
   ],
   [
-    "Price is end-of-day without Alpaca",
-    "The keyless Yahoo fallback is daily. Intraday lead-lag, the timescale on which much of this actually happens, is not represented unless Alpaca intraday bars are configured.",
+    "Some price data is daily",
+    "Without Alpaca, price checks use daily Yahoo data. Fast moves within a trading day will not be visible in that mode.",
   ],
   [
-    "Coverage is not evidence of absence",
-    "Google News, Yahoo News and GDELT index large but incomplete slices of coverage. A quiet news z-score means the sources that answered were quiet; the coverage strip states which ones answered.",
+    "No source sees everything",
+    "Google News, Yahoo News, and GDELT cover a large but incomplete share of the news. Every result shows which sources actually answered.",
   ],
   [
     "Nothing here is advice",
@@ -67,9 +67,9 @@ export default function MethodPage() {
   return (
     <>
       <PageHero
-        eyebrow="Method"
-        title={<>The distance between knowing and pricing.</>}
-        sub="Five steps, all of them inspectable. Every number on a result page traces back to a timestamped source you can open."
+        eyebrow="How it works"
+        title={<>From a ticker to a clear next step.</>}
+        sub="Five transparent steps. Every conclusion links back to evidence you can open yourself."
       />
 
       <section className="section-shell py-16 md:py-24">
@@ -91,9 +91,9 @@ export default function MethodPage() {
       <section className="section-rule" id="limits">
         <div className="section-shell py-20 md:py-28">
           <SectionHeading
-            eyebrow="Known limits"
-            title={<>What this will not tell you.</>}
-            sub="Stated here rather than discovered later. A research tool that hides its blind spots is worse than no tool."
+            eyebrow="What to keep in mind"
+            title={<>Where the signal can be wrong.</>}
+            sub="Every research tool has blind spots. APE Alpha shows its limits so you can judge each result with the right context."
           />
           <ul className="mt-14 grid list-none gap-0 border-t border-line-strong p-0" id="coverage">
             {LIMITS.map(([title, body], index) => (

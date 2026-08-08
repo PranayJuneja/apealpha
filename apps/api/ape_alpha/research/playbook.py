@@ -69,7 +69,7 @@ def build_playbook(
     if conflict:
         return Playbook(
             stance="STAND_ASIDE",
-            rationale="Sources disagree about what is happening. A signal built on contradictory inputs is not a signal.",
+            rationale="The sources disagree about what is happening. Wait for a clearer picture instead of acting on conflicting information.",
             entry_trigger="None. Re-run once the sources agree.",
             invalidation="Not applicable — no position is contemplated.",
             time_stop_hours=0,
@@ -82,11 +82,11 @@ def build_playbook(
         return Playbook(
             stance="WATCH",
             rationale=(
-                "The social leg is dark, so the narrative gap cannot be measured. What is shown below is "
-                "news and price only: a zero social score here means unmeasured, not quiet. Connect an "
-                "authorized WebCMD social session or Reddit API fallback to get a phase at all."
+                "Investor conversation data is unavailable, so APE Alpha cannot tell whether the crowd is "
+                "early or late. The result only reflects news and price; wait for a complete search before "
+                "considering a paper position."
             ),
-            entry_trigger="None until the social leg reports. The engine will not size a position it cannot measure.",
+            entry_trigger="Wait until investor conversation data is available. APE Alpha will not size a position it cannot fully measure.",
             invalidation="Not applicable — no position is contemplated.",
             time_stop_hours=0,
             max_nav_pct=0.0,
@@ -98,9 +98,9 @@ def build_playbook(
         return Playbook(
             stance="STAND_ASIDE",
             rationale=(
-                f"Attention arrived after the move. The security ran {features.pre_signal_return:+.1%} before "
-                f"the crowd showed up and mention growth is now decelerating ({features.social_acceleration:.2f}×). "
-                "Buying here supplies the exit."
+                f"The price moved {features.pre_signal_return:+.1%} before most investors started talking, "
+                "and conversation is now slowing. The story looks late, so chasing it carries more risk "
+                "than opportunity."
             ),
             entry_trigger="None on the long side at this phase.",
             invalidation="Not applicable — no position is contemplated.",
@@ -114,9 +114,8 @@ def build_playbook(
         return Playbook(
             stance="STAND_ASIDE",
             rationale=(
-                f"Social ({features.social_z:+.1f}σ), news ({features.news_z:+.1f}σ) and price "
-                f"({features.market_z:+.1f}σ) are all elevated together. When every layer knows, there is no "
-                "informational edge left to harvest."
+                "Investor conversation, news, and price are all unusually active at the same time. The "
+                "market already knows the story, so there is no clear early advantage left."
             ),
             entry_trigger="None. Revisit only if attention decays while the catalyst stays intact.",
             invalidation="Not applicable — no position is contemplated.",
@@ -143,10 +142,9 @@ def build_playbook(
         return Playbook(
             stance="PAPER_LONG",
             rationale=(
-                f"Social attention leads news by {features.social_news_gap:+.1f}σ with a catalyst quality of "
-                f"{features.catalyst_quality:.0%}, and price has not yet absorbed it "
-                f"({features.market_z:+.1f}σ, {features.pre_signal_return:+.1%} trailing). This is the shape "
-                "the engine is built to find: the story is real and not yet paid for."
+                "Investor attention is ahead of news, independent evidence supports the story, and the "
+                f"price has moved only {features.pre_signal_return:+.1%} recently. This is the setup APE "
+                "Alpha looks for: a real story that may not be fully priced in yet."
             ),
             entry_trigger=(
                 "Enter on the next session open only if the narrative gap is still ≥1.0σ at that point and "
@@ -171,11 +169,11 @@ def build_playbook(
         if features.unique_authors < 5:
             blockers.append(f"only {features.unique_authors} distinct authors")
         if social_dark:
-            blockers.append("the social leg is dark, so the gap cannot be trusted")
+            blockers.append("investor conversation data is unavailable, so the timing cannot be trusted")
         return Playbook(
             stance="WATCH",
             rationale=(
-                "The narrative is confirmed but does not clear the entry bar: "
+                "The story has supporting evidence, but it does not yet meet every rule for a paper buy: "
                 + "; ".join(blockers)
                 + "."
             ),
@@ -190,8 +188,8 @@ def build_playbook(
     return Playbook(
         stance="WATCH",
         rationale=(
-            f"Early and unconfirmed. Social is at {features.social_z:+.1f}σ with no independent corroboration "
-            "yet, which is where the best entries and the worst false positives both live."
+            "Investor attention appears early, but no reliable outside source has confirmed the story yet. "
+            "Keep watching: this is where both genuine opportunities and false alarms begin."
         ),
         entry_trigger="Wait for a filing, a tier-one story or an IR release to confirm the claim before sizing anything.",
         invalidation="Abandon if attention decays without any confirming evidence appearing within 48 hours.",
