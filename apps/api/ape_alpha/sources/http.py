@@ -76,6 +76,7 @@ async def request_json(
     auth: tuple[str, str] | None = None,
     attempts: int = 3,
     use_cache: bool = True,
+    timeout_seconds: float | None = None,
 ) -> Any:
     """Fetch JSON with bounded retries on transient failures.
 
@@ -90,7 +91,8 @@ async def request_json(
             return cached
 
     last_detail = "no attempt completed"
-    async with httpx.AsyncClient(timeout=config.request_timeout_seconds, follow_redirects=True) as client:
+    timeout = timeout_seconds if timeout_seconds is not None else config.request_timeout_seconds
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
         for attempt in range(attempts):
             try:
                 response = await client.request(

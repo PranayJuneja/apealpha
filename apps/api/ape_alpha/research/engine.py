@@ -25,11 +25,11 @@ from ..sources import social as social_source
 from ..sources import sec as sec_source
 from ..sources.http import SourceError, SourceUnavailable
 from .features import build_features
-from .llm import groq_narrative, rules_narrative
+from .llm import openai_analysis, rules_narrative, rules_understanding
 from .playbook import build_playbook
 from .resolve import Resolution, resolve
 
-DATASET_VERSION = "live-acquisition-v4-webcmd-reddit-news"
+DATASET_VERSION = "live-acquisition-v5-webcmd-reddit-x-news"
 
 # Per-source wall-clock budget. Sources are fetched concurrently, so without a
 # cap the slowest one sets the latency of the whole run — and GDELT in
@@ -143,7 +143,7 @@ async def research(
 ) -> ResearchResult:
     """Run every live source against one query and return a complete result.
 
-    Sources are fetched concurrently and failures are isolated: a dark Reddit
+    Sources are fetched concurrently and failures are isolated: a dark social
     leg degrades the answer and is reported as such, but still produces news,
     filing and price analysis rather than an error page.
     """
@@ -192,7 +192,7 @@ async def research(
             detail=social_result.detail,
         )
     else:
-        posts, social_status = _unwrap(social_result, "social", "webcmd + reddit-oauth")
+        posts, social_status = _unwrap(social_result, "social", "webcmd-x + webcmd-reddit + reddit-oauth")
     gdelt_articles, gdelt_status = _unwrap(fetched[1], "news", "gdelt")
     timeline_result = fetched[2]
     timeline = timeline_result if isinstance(timeline_result, list) else []
@@ -289,6 +289,8 @@ async def research(
                     "score": post["score"],
                     "comments": post["comments"],
                     "flair": post["flair"],
+                    "views": post.get("views", 0),
+                    "has_media": post.get("has_media", False),
                 },
             )
         )
@@ -349,19 +351,25 @@ async def research(
 
     narrative = rules_narrative(best.ticker, best.company, features, phase, playbook)
     narrative_source: str = "rules"
-    # With no phase to describe, the deterministic text is the honest one: a
-    # language model handed a zeroed social block tends to narrate it as silence.
-    if use_llm and phase is not NarrativePhase.INDETERMINATE:
+    understanding = rules_understanding(best.ticker, features, phase)
+    analysis_warning = ""
+    if use_llm:
         try:
-            narrative = await groq_narrative(
-                best.ticker, best.company, features, phase,
-                [article["title"] for article in articles[-12:]],
+            narrative, understanding = await openai_analysis(
+                best.ticker,
+                best.company,
+                features,
+                phase,
+                [post["body"] for post in posts[-12:]]
+                + [article["title"] for article in articles[-8:]],
             )
-            narrative_source = "groq"
-        except (SourceError, KeyError, ValueError):
-            pass
+            narrative_source = "openai"
+        except (SourceError, KeyError, ValueError) as exc:
+            analysis_warning = f"OpenAI analysis: {exc.detail if isinstance(exc, SourceError) else 'invalid response'}"
 
     warnings: list[str] = []
+    if analysis_warning:
+        warnings.append(analysis_warning)
     if best.confidence < 0.9:
         others = ", ".join(f"{item.ticker} ({item.company})" for item in candidates[1:4])
         warnings.append(
@@ -389,5 +397,6 @@ async def research(
         coverage=coverage,
         narrative=narrative,
         narrative_source=narrative_source,  # type: ignore[arg-type]
+        understanding=understanding,
         warnings=warnings,
     )

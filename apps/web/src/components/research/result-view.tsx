@@ -8,6 +8,7 @@ import { EvidenceLedger } from "./evidence-ledger";
 import { NarrativeGap } from "./narrative-gap";
 import { PhaseBadge } from "./phase-badge";
 import { PlaybookCard } from "./playbook-card";
+import { UnderstandingCard } from "./understanding-card";
 
 function Metric({ label, value, note }: { label: string; value: string; note: string }) {
   return (
@@ -55,9 +56,15 @@ export function ResultView({ result }: { result: ResearchResult }) {
         <Reveal delay={0.06}>
           <p className="mt-8 max-w-4xl text-[1.15rem] leading-8 text-ink">{result.narrative}</p>
           <p className="mt-4 text-xs text-muted">
-            {copy.summary} Narrative written by {result.narrative_source === "groq" ? "the language layer" : "deterministic rules"};
+            {copy.summary} Narrative written by {result.narrative_source === "openai" ? "GPT-5.6 Luna" : "deterministic rules"};
             the stance below always comes from rules.
           </p>
+        </Reveal>
+      </section>
+
+      <section className="section-shell mt-12">
+        <Reveal delay={0.08}>
+          <UnderstandingCard understanding={result.understanding} />
         </Reveal>
       </section>
 

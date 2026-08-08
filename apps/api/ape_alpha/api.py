@@ -55,7 +55,7 @@ def health() -> dict[str, Any]:
             "reddit": config.reddit_enabled,
             "webcmd": webcmd_configured(),
             "alpaca": config.alpaca_enabled,
-            "groq": config.groq_enabled,
+            "openai": config.openai_enabled,
         },
     }
 
@@ -166,6 +166,13 @@ async def source_health() -> dict[str, Any]:
                 else webcmd_error or "Install the Reddit WebCMD adapter",
             },
             {
+                "source": "WebCMD X",
+                "status": "ready" if "twitter/search" in commands else "unavailable",
+                "detail": "On-demand X search through the authorized WebCMD browser session"
+                if "twitter/search" in commands
+                else webcmd_error or "Install the Twitter WebCMD adapter",
+            },
+            {
                 "source": "WebCMD Google News",
                 "status": "ready" if "ape-alpha/google-news" in commands else "unavailable",
                 "detail": "On-demand locale-aware current news via public RSS"
@@ -197,11 +204,11 @@ async def source_health() -> dict[str, Any]:
                 else "Yahoo daily — set ALPACA_API_KEY for intraday",
             },
             {
-                "source": "Groq narrative",
-                "status": "ready" if config.groq_enabled else "unavailable",
-                "detail": "Narrative layer only; stance always comes from rules"
-                if config.groq_enabled
-                else "Set GROQ_API_KEY to enable written summaries",
+                "source": "OpenAI analysis",
+                "status": "ready" if config.openai_enabled else "unavailable",
+                "detail": f"Narrative, sentiment and evidence interpretation via {config.openai_model}"
+                if config.openai_enabled
+                else "Set OPENAI_API_KEY to enable the AI analysis layer",
             },
         ]
     }

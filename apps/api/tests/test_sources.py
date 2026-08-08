@@ -131,6 +131,27 @@ def test_social_search_recognizes_an_explicit_ticker() -> None:
     assert social._explicit_ticker("Why I still own $PLTR", "PLTR") is True
 
 
+def test_twitter_normalizes_into_the_shared_social_shape() -> None:
+    normalized = social._normalize_twitter(
+        {
+            "id": "123",
+            "author": "alice",
+            "text": "$PLTR demand looks strong",
+            "created_at": "Sat Aug 08 10:00:00 +0000 2026",
+            "likes": 12,
+            "views": "450",
+            "url": "https://x.com/alice/status/123",
+            "has_media": True,
+        },
+        "PLTR",
+    )
+    assert normalized["platform"] == "x"
+    assert normalized["author"] == "@alice"
+    assert normalized["score"] == 12
+    assert normalized["views"] == 450
+    assert normalized["created_at"].tzinfo is not None
+
+
 @pytest.mark.asyncio
 async def test_webcmd_reddit_query_is_one_argument_and_filters_false_positives(
     monkeypatch: pytest.MonkeyPatch,
@@ -198,11 +219,37 @@ async def test_empty_reddit_search_is_still_live_coverage(
     async def reddit_live(*_: Any, **__: Any) -> social.ProviderFetch:
         return social.ProviderFetch("webcmd-reddit", [])
 
+    async def twitter_unavailable(*_: Any, **__: Any) -> social.ProviderFetch:
+        raise SourceUnavailable("webcmd-twitter", "login required")
+
     monkeypatch.setattr(social, "settings", lambda: Config())
     monkeypatch.setattr(social, "_reddit_auto", reddit_live)
+    monkeypatch.setattr(social, "_twitter_webcmd", twitter_unavailable)
     result = await social.fetch_mentions("PLTR", "Palantir", subreddits=("stocks",), limit=10)
     assert result.provider == "webcmd-reddit"
-    assert result.detail == "webcmd-reddit 0"
+    assert "webcmd-reddit 0" in result.detail
+    assert "webcmd-twitter unavailable" in result.detail
+
+
+@pytest.mark.asyncio
+async def test_social_fetch_merges_reddit_and_x(monkeypatch: pytest.MonkeyPatch) -> None:
+    stamp = datetime(2026, 8, 8, 10, 0, tzinfo=UTC)
+
+    async def reddit_live(*_: Any, **__: Any) -> social.ProviderFetch:
+        return social.ProviderFetch("webcmd-reddit", [{
+            "id": "r1", "platform": "reddit", "created_at": stamp,
+        }])
+
+    async def twitter_live(*_: Any, **__: Any) -> social.ProviderFetch:
+        return social.ProviderFetch("webcmd-twitter", [{
+            "id": "x1", "platform": "x", "created_at": stamp + timedelta(minutes=1),
+        }])
+
+    monkeypatch.setattr(social, "_reddit_auto", reddit_live)
+    monkeypatch.setattr(social, "_twitter_webcmd", twitter_live)
+    result = await social.fetch_mentions("PLTR", "Palantir", subreddits=("stocks",), limit=10)
+    assert [post["id"] for post in result.posts] == ["r1", "x1"]
+    assert result.provider == "webcmd-reddit + webcmd-twitter"
 
 
 @pytest.mark.asyncio

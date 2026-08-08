@@ -17,7 +17,7 @@ const STEPS = [
   {
     number: "02",
     title: "Acquire",
-    body: "Every query asks WebCMD to search the authorized Reddit session plus current Google News and Yahoo News. GDELT's historical baseline, the market's filing source and price bars are fetched concurrently under wall-clock budgets. A failure in one provider is isolated and recorded rather than converted to zero; duplicate headlines are counted once.",
+    body: "Every query asks WebCMD to search the authorized X and Reddit sessions plus current Google News and Yahoo News. GDELT's historical baseline, the market's filing source and price bars are fetched concurrently under wall-clock budgets. A failure in one provider is isolated and recorded rather than converted to zero; duplicate headlines are counted once.",
   },
   {
     number: "03",
@@ -32,7 +32,7 @@ const STEPS = [
   {
     number: "05",
     title: "Plan",
-    body: "A phase and a rules-based playbook follow deterministically. Entry conditions, invalidation, a time stop and a position cap are all stated up front so the claim can be checked later rather than remembered generously.",
+    body: "A phase and rules-based playbook follow deterministically. GPT-5.6 Luna then returns the short narrative and a structured final read of sentiment, drivers and risks in one call. The model cannot change the phase, stance, entry conditions, invalidation, time stop or position cap.",
   },
 ];
 
@@ -43,11 +43,11 @@ const LIMITS = [
   ],
   [
     "The social leg has no deep history",
-    "Reddit publishes no licensed archive and Pushshift is restricted to moderators. Historical rows are reconstructed from news and price only, and are marked as such. Social observations accrue forward from the moment you start running the engine.",
+    "The connected X and Reddit surfaces do not provide the licensed deep archive required for point-in-time reconstruction. Historical rows use news and price only and are marked as such. Social observations accrue forward from the moment you start running the engine.",
   ],
   [
     "Sentiment is a lexicon, not a model",
-    "Bullish share is counted from an explicit word list. It is transparent and cheap, and it will misread sarcasm — which is abundant on exactly the forums being read.",
+    "Bullish share is still counted from an explicit word list so the signal remains reproducible. GPT-5.6 Luna adds a final interpretation, but it does not rewrite that metric and may still misunderstand sarcasm or coordinated posting.",
   ],
   [
     "Price is end-of-day without Alpaca",

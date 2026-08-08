@@ -15,7 +15,7 @@ export default function ResearchPage() {
       <PageHero
         eyebrow="Live research"
         title={<>One security. Every source. Right now.</>}
-        sub="Nothing is precomputed. Each query searches WebCMD Reddit, Google News and Yahoo News, then reads filings and price for that security and scores the distance between them."
+        sub="Nothing is precomputed. Each query searches WebCMD X, Reddit, Google News and Yahoo News, reads filings and price, scores the distance between them, then asks GPT-5.6 Luna for the final interpretation."
       />
       <SearchConsole />
     </>

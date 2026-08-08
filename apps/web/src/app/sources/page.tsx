@@ -13,6 +13,12 @@ export const metadata: Metadata = {
 
 const SETUP = [
   {
+    source: "WebCMD X",
+    env: [],
+    how: "Install the Twitter WebCMD plugin, then run `webcmd twitter login` once and complete login yourself. Each run searches current X posts without exposing the session to Ape Alpha.",
+    without: "Reddit can keep the social leg live, but X sentiment and reach are absent and the partial coverage is disclosed.",
+  },
+  {
     source: "WebCMD Reddit",
     env: [],
     how: "Run `npm run webcmd -- reddit login` once and complete the login yourself. Each ticker query then searches that authorized session; APE Alpha receives normalized results, not your cookie or password.",
@@ -31,10 +37,10 @@ const SETUP = [
     without: "Price falls back to Yahoo daily bars. Everything still works at end-of-day resolution.",
   },
   {
-    source: "Groq",
-    env: ["GROQ_API_KEY"],
-    how: "Optional narrative layer that writes prose about the computed metrics.",
-    without: "Deterministic rule-written narrative is used instead. The stance is unaffected either way.",
+    source: "OpenAI GPT-5.6 Luna",
+    env: ["OPENAI_API_KEY"],
+    how: "One structured call writes the narrative and interprets measured sentiment, drivers and risks after deterministic scoring.",
+    without: "The narrative and final understanding use transparent deterministic fallbacks. The stance and metrics are unaffected.",
   },
   {
     source: "WebCMD Google + Yahoo News",
@@ -64,7 +70,7 @@ export default async function SourcesPage() {
       <PageHero
         eyebrow="Source health"
         title={<>Every leg, and what happens when one goes dark.</>}
-        sub="No Reddit API approval is required. The authorized WebCMD session and every keyless provider are reported explicitly rather than silently zeroed."
+        sub="No social API approval is required. Authorized WebCMD X and Reddit sessions and every keyless provider are reported explicitly rather than silently zeroed."
       />
 
       <section className="section-shell py-16 md:py-24">

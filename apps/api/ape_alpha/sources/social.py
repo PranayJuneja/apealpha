@@ -4,6 +4,7 @@ import asyncio
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Awaitable
 
 from ..config import settings
@@ -34,7 +35,11 @@ def _created_at(value: Any, *, unknown_is_now: bool = True) -> datetime:
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
             return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
         except ValueError:
-            pass
+            try:
+                parsed = parsedate_to_datetime(value)
+                return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+            except (TypeError, ValueError):
+                pass
     return datetime.now(UTC) if unknown_is_now else datetime.fromtimestamp(0, tz=UTC)
 
 
@@ -69,6 +74,30 @@ def _normalize_reddit(row: dict[str, Any], ticker: str) -> dict[str, Any]:
         "body_length": len(body),
         "created_at": _created_at(row.get("created_utc"), unknown_is_now=False),
         "url": str(row.get("url", "") or ""),
+    }
+
+
+def _normalize_twitter(row: dict[str, Any], ticker: str) -> dict[str, Any]:
+    text = str(row.get("text", "") or "").strip()
+    author = str(row.get("author", "") or "unknown").removeprefix("@")
+    return {
+        "id": str(row.get("id", "") or ""),
+        "ticker": ticker,
+        "title": text[:280],
+        "body": text,
+        "author": f"@{author}" if author != "unknown" else author,
+        "subreddit": "",
+        "community": "X",
+        "platform": "x",
+        "flair": "",
+        "score": int(row.get("likes", 0) or 0),
+        "comments": 0,
+        "upvote_ratio": 0.5,
+        "body_length": len(text),
+        "created_at": _created_at(row.get("created_at"), unknown_is_now=False),
+        "url": str(row.get("url", "") or ""),
+        "views": int(row.get("views", 0) or 0),
+        "has_media": bool(row.get("has_media", False)),
     }
 
 
@@ -133,6 +162,35 @@ async def _reddit_oauth(
     return ProviderFetch("reddit-oauth", posts)
 
 
+async def _twitter_webcmd(ticker: str, company: str, limit: int) -> ProviderFetch:
+    payload = await invoke_json(
+        (
+            "twitter",
+            "search",
+            f"{_query(ticker, company)} lang:en",
+            "--product",
+            "live",
+            "--exclude",
+            "replies",
+            "--limit",
+            str(limit),
+            "-f",
+            "json",
+        ),
+        source="webcmd-twitter",
+        timeout=settings().webcmd_timeout_seconds,
+    )
+    if not isinstance(payload, list):
+        raise SourceError("webcmd-twitter", "search returned an unsupported shape")
+    posts = [_normalize_twitter(row, ticker) for row in payload if isinstance(row, dict)]
+    posts = [
+        post
+        for post in posts
+        if post["id"] and _explicit_ticker(f"{post['title']} {post['body']}", ticker)
+    ]
+    return ProviderFetch("webcmd-twitter", posts)
+
+
 async def _reddit_auto(
     ticker: str,
     company: str,
@@ -168,7 +226,8 @@ async def fetch_mentions(
     detail string instead of being converted to a fabricated quiet-crowd zero.
     """
     calls: list[Awaitable[ProviderFetch]] = [
-        _reddit_auto(ticker, company, subreddits, timeframe, limit)
+        _reddit_auto(ticker, company, subreddits, timeframe, limit),
+        _twitter_webcmd(ticker, company, limit),
     ]
 
     fetched = await asyncio.gather(*calls, return_exceptions=True)
