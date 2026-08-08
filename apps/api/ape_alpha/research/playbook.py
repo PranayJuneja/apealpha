@@ -71,7 +71,7 @@ def build_playbook(
             stance="STAND_ASIDE",
             rationale="The sources disagree about what is happening. Wait for a clearer picture instead of acting on conflicting information.",
             entry_trigger="A re-run where the crowd, the news and the price point the same way.",
-            invalidation="Not applicable — no position is contemplated.",
+            invalidation="The disagreement hardening — if the split persists, the story is not one story.",
             time_stop_hours=0,
             max_nav_pct=0.0,
             expected_holding_period="—",
@@ -86,8 +86,8 @@ def build_playbook(
                 "early or late. The result only reflects news and price; wait for a complete search before "
                 "considering a paper position."
             ),
-            entry_trigger="Wait until investor conversation data is available. APE Alpha will not size a position it cannot fully measure.",
-            invalidation="Not applicable — no position is contemplated.",
+            entry_trigger="Investor conversation coming back online, so the timing can actually be measured.",
+            invalidation="Nothing to invalidate yet — this run measured news and price only.",
             time_stop_hours=0,
             max_nav_pct=0.0,
             expected_holding_period="—",
@@ -105,7 +105,7 @@ def build_playbook(
             entry_trigger=(
                 "A fresh catalyst arriving after attention has cooled, with the recent run-up unwound."
             ),
-            invalidation="Not applicable — no position is contemplated.",
+            invalidation="Attention reviving on the same old story — that is the late move repeating, not a new one.",
             time_stop_hours=0,
             max_nav_pct=0.0,
             expected_holding_period="—",
@@ -122,7 +122,7 @@ def build_playbook(
             entry_trigger=(
                 "Attention cooling off while the catalyst stays intact — that is when the edge can return."
             ),
-            invalidation="Not applicable — no position is contemplated.",
+            invalidation="News and price cooling together, which would mean the story is simply over.",
             time_stop_hours=0,
             max_nav_pct=0.0,
             expected_holding_period="—",
