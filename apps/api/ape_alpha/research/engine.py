@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from datetime import UTC, datetime
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 from ..config import settings
 from ..contracts import (
@@ -82,6 +82,40 @@ async def _budgeted(coro: Any) -> Any:
     return await asyncio.wait_for(coro, timeout=SOURCE_BUDGET_SECONDS)
 
 
+# Progress events are one-way notifications for a UI; they never change the
+# result. Keys name acquisition legs as the frontend presents them.
+ProgressFn = Callable[[dict[str, Any]], None]
+
+
+def _result_count(result: Any) -> int:
+    if isinstance(result, social_source.SocialFetch):
+        return len(result.posts)
+    if isinstance(result, live_news_source.NewsFetch):
+        return len(result.articles)
+    if isinstance(result, tuple):  # (bars, provider)
+        return len(result[0])
+    if isinstance(result, (list, tuple)):
+        return len(result)
+    return 0
+
+
+async def _traced(key: str, coro: Any, emit: ProgressFn) -> Any:
+    """Run one budgeted source fetch, reporting start and outcome.
+
+    Mirrors gather(return_exceptions=True): exceptions are returned, not
+    raised, so downstream unwrapping stays unchanged.
+    """
+    emit({"type": "source_start", "key": key})
+    try:
+        result = await _budgeted(coro)
+    except BaseException as exc:  # noqa: BLE001 - handed to _unwrap downstream
+        detail = str(getattr(exc, "detail", "") or type(exc).__name__)
+        emit({"type": "source_done", "key": key, "ok": False, "detail": detail})
+        return exc
+    emit({"type": "source_done", "key": key, "ok": True, "count": _result_count(result)})
+    return result
+
+
 def _unwrap(result: Any, source: str, provider: str = "") -> tuple[Any, SourceStatus]:
     """Turn a gather result into data plus an honest status line."""
     if isinstance(result, SourceUnavailable):
@@ -140,6 +174,7 @@ async def research(
     market: Market | str = Market.US,
     as_of: datetime | None = None,
     use_llm: bool = True,
+    emit: ProgressFn | None = None,
 ) -> ResearchResult:
     """Run every live source against one query and return a complete result.
 
@@ -147,12 +182,23 @@ async def research(
     leg degrades the answer and is reported as such, but still produces news,
     filing and price analysis rather than an error page.
     """
+    emit = emit or (lambda event: None)
     as_of = as_of or datetime.now(UTC)
+    emit({"type": "resolve_start", "query": query})
     candidates = await resolve(query, market=market, as_of=as_of.date())
     if not candidates:
         raise UnresolvedQuery(query, [])
     best = candidates[0]
     profile = best.profile
+    emit(
+        {
+            "type": "resolved",
+            "ticker": best.display_symbol,
+            "company": best.company,
+            "market": best.market.value,
+            "confidence": best.confidence,
+        }
+    )
 
     filings_call = (
         sec_source.fetch_filings(best.cik)
@@ -162,22 +208,38 @@ async def research(
     requested_price_resolution = "1Hour" if settings().alpaca_enabled else "1Day"
 
     fetched = await asyncio.gather(
-        _budgeted(
+        _traced(
+            "social",
             social_source.fetch_mentions(
                 best.display_symbol, best.company, subreddits=profile.subreddits
-            )
+            ),
+            emit,
         ),
-        _budgeted(news_source.fetch_articles(best.display_symbol, best.company, timespan="7d")),
-        _budgeted(news_source.fetch_volume_timeline(best.display_symbol, best.company)),
-        _budgeted(
+        _traced(
+            "news_archive",
+            news_source.fetch_articles(best.display_symbol, best.company, timespan="7d"),
+            emit,
+        ),
+        _traced(
+            "news_baseline",
+            news_source.fetch_volume_timeline(best.display_symbol, best.company),
+            emit,
+        ),
+        _traced(
+            "price",
             market_source.fetch_bars(
                 best.ticker,
                 lookback_days=180,
                 timeframe=requested_price_resolution,
-            )
+            ),
+            emit,
         ),
-        _budgeted(filings_call),
-        _budgeted(live_news_source.fetch_articles(best.display_symbol, best.company, profile)),
+        _traced("filings", filings_call, emit),
+        _traced(
+            "news_current",
+            live_news_source.fetch_articles(best.display_symbol, best.company, profile),
+            emit,
+        ),
         return_exceptions=True,
     )
 
@@ -274,6 +336,17 @@ async def research(
     phase = classify_phase(features) if social_live else NarrativePhase.INDETERMINATE
     conflict = detect_conflict(features, len(posts)) if social_live else False
     playbook = build_playbook(features, phase, coverage, conflict=conflict)
+    emit(
+        {
+            "type": "classified",
+            "phase": phase.value,
+            "stance": playbook.stance,
+            "social_z": features.social_z,
+            "news_z": features.news_z,
+            "market_z": features.market_z,
+            "gap": features.social_news_gap,
+        }
+    )
 
     ingested_at = datetime.now(UTC)
     events: list[SourceEvent] = []
@@ -354,6 +427,12 @@ async def research(
     understanding = rules_understanding(best.ticker, features, phase)
     analysis_warning = ""
     if use_llm:
+        emit(
+            {
+                "type": "analysis_start",
+                "evidence": min(len(posts), 12) + min(len(articles), 8),
+            }
+        )
         try:
             narrative, understanding = await openai_analysis(
                 best.ticker,
@@ -364,8 +443,10 @@ async def research(
                 + [article["title"] for article in articles[-8:]],
             )
             narrative_source = "openai"
+            emit({"type": "analysis_done", "ok": True, "sentiment": understanding.sentiment})
         except (SourceError, KeyError, ValueError) as exc:
             analysis_warning = f"OpenAI analysis: {exc.detail if isinstance(exc, SourceError) else 'invalid response'}"
+            emit({"type": "analysis_done", "ok": False})
 
     warnings: list[str] = []
     if analysis_warning:
