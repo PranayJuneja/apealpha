@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from .backfill import backfill_ticker
@@ -111,6 +113,62 @@ async def run_research(request: ResearchRequest) -> ResearchResult:
     return result
 
 
+@app.post("/api/v1/research/stream")
+async def run_research_stream(request: ResearchRequest) -> StreamingResponse:
+    """The same research run, but with acquisition progress as NDJSON events.
+
+    Each line is one JSON object. Progress events (`source_start`,
+    `source_done`, `classified`, `analysis_*`) arrive as the engine reaches
+    them; the final line is either `{"type": "result", ...}` with the complete
+    ResearchResult or `{"type": "error", ...}`.
+    """
+    queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
+
+    def emit(event: dict[str, Any]) -> None:
+        queue.put_nowait(event)
+
+    async def runner() -> None:
+        try:
+            result = await research(
+                request.query, market=request.market, use_llm=request.use_llm, emit=emit
+            )
+            if request.record:
+                append_snapshots(project_root(), [row_from_result(result)])
+            queue.put_nowait({"type": "result", "result": json.loads(result.model_dump_json())})
+        except UnresolvedQuery as exc:
+            queue.put_nowait(
+                {
+                    "type": "error",
+                    "status": 404,
+                    "message": f"Could not resolve {exc.query!r} to a listing on the {request.market.value} market.",
+                }
+            )
+        except SourceError as exc:
+            queue.put_nowait({"type": "error", "status": 503, "message": exc.detail})
+        except Exception as exc:  # noqa: BLE001 - the stream must always terminate
+            queue.put_nowait({"type": "error", "status": 500, "message": str(exc)})
+        finally:
+            queue.put_nowait(None)
+
+    async def stream() -> AsyncIterator[str]:
+        task = asyncio.create_task(runner())
+        try:
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield json.dumps(event, default=str) + "\n"
+        finally:
+            if not task.done():
+                task.cancel()
+
+    return StreamingResponse(
+        stream(),
+        media_type="application/x-ndjson",
+        headers={"cache-control": "no-store", "x-accel-buffering": "no"},
+    )
+
+
 @app.get("/api/v1/watchlist")
 def watchlist(limit: int = Query(default=12, ge=1, le=100)) -> dict[str, Any]:
     """The most recent live observation per ticker in the store."""
@@ -154,7 +212,7 @@ async def source_health() -> dict[str, Any]:
     webcmd_error = ""
     try:
         commands = await installed_commands()
-    except (SourceError, SourceUnavailable) as exc:
+    except SourceError as exc:
         webcmd_error = exc.detail
     return {
         "sources": [

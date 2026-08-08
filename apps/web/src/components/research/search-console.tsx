@@ -1,45 +1,186 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { markets } from "@/lib/site";
 import type { MarketCode, ResearchResult } from "@/types/research";
+import {
+  AcquisitionConsole,
+  emptyTheater,
+  type TheaterState,
+} from "./acquisition-console";
 import { ResultView } from "./result-view";
 import { SearchInsightCard } from "./search-insight-card";
 
-// The pipeline runs in this order, so the labels describe what is genuinely
-// happening rather than animating a meaningless bar.
-function stagesFor(market: MarketCode) {
-  const filings = market === "US" ? "EDGAR" : "NSE announcements";
-  return [
-    { at: 0, label: "Finding the right company…" },
-    { at: 1800, label: `Checking investor posts, news, and ${filings}…` },
-    { at: 6000, label: "Comparing attention with the price move…" },
-    { at: 11000, label: "Turning the evidence into a next step…" },
-    { at: 14000, label: "Writing your plain-English summary…" },
-  ];
+/** Human log copy for each engine progress event. */
+const LEG_TAGS: Record<string, string> = {
+  resolve: "RESOLVE",
+  social: "SOCIAL",
+  news_current: "NEWS",
+  news_archive: "ARCHIVE",
+  news_baseline: "BASELINE",
+  filings: "FILINGS",
+  price: "PRICE",
+  analysis: "AI",
+};
+
+type StreamEvent = {
+  type: string;
+  key?: string;
+  ok?: boolean;
+  count?: number;
+  detail?: string;
+  ticker?: string;
+  company?: string;
+  confidence?: number;
+  phase?: string;
+  stance?: string;
+  gap?: number;
+  sentiment?: string;
+  evidence?: number;
+  message?: string;
+  result?: ResearchResult;
+};
+
+function applyEvent(state: TheaterState, event: StreamEvent): TheaterState {
+  const at = Date.now() - state.startedAt;
+  const next: TheaterState = {
+    ...state,
+    sources: { ...state.sources },
+    log: [...state.log],
+  };
+  const push = (tag: string, line: string) => next.log.push({ at, tag, line });
+
+  switch (event.type) {
+    case "resolve_start":
+      next.sources.resolve = { phase: "searching" };
+      push("RESOLVE", `matching “${state.query}” against the listing universe`);
+      break;
+    case "resolved":
+      next.resolved = {
+        ticker: event.ticker ?? "",
+        company: event.company ?? "",
+        confidence: event.confidence ?? 0,
+      };
+      next.sources.resolve = { phase: "live", detail: event.ticker };
+      push(
+        "RESOLVE",
+        `matched ${event.ticker} — ${event.company} (${Math.round((event.confidence ?? 0) * 100)}%)`,
+      );
+      break;
+    case "source_start":
+      if (event.key) {
+        next.sources[event.key] = { phase: "searching" };
+        push(LEG_TAGS[event.key] ?? event.key.toUpperCase(), "channel open, searching…");
+      }
+      break;
+    case "source_done":
+      if (event.key) {
+        next.sources[event.key] = event.ok
+          ? { phase: "live", count: event.count }
+          : { phase: "dark", detail: event.detail };
+        push(
+          LEG_TAGS[event.key] ?? event.key.toUpperCase(),
+          event.ok
+            ? `${event.count ?? 0} items captured`
+            : `no answer (${event.detail ?? "unavailable"}) — continuing`,
+        );
+      }
+      break;
+    case "classified":
+      next.classified = {
+        phase: event.phase ?? "",
+        stance: event.stance ?? "",
+        gap: event.gap ?? 0,
+      };
+      push(
+        "SIGNAL",
+        `phase ${event.phase} · attention-vs-news gap ${(event.gap ?? 0) >= 0 ? "+" : ""}${(event.gap ?? 0).toFixed(1)}σ`,
+      );
+      break;
+    case "analysis_start":
+      next.sources.analysis = { phase: "searching" };
+      push("AI", `GPT-5.6 Luna reading ${event.evidence ?? 0} evidence items`);
+      break;
+    case "analysis_done":
+      next.sources.analysis = event.ok
+        ? { phase: "live", detail: `sentiment: ${(event.sentiment ?? "").replace("_", " ")}` }
+        : { phase: "dark", detail: "deterministic fallback" };
+      push("AI", event.ok ? `sentiment read: ${(event.sentiment ?? "").replace("_", " ")}` : "fallback to fixed rules");
+      break;
+  }
+  return next;
 }
 
 export function SearchConsole() {
   const [query, setQuery] = useState("");
   const [market, setMarket] = useState<MarketCode>("US");
   const [busy, setBusy] = useState(false);
-  const [stage, setStage] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ResearchResult | null>(null);
+  const [theater, setTheater] = useState<TheaterState | null>(null);
+  const theaterRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const active = markets.find((item) => item.code === market) ?? markets[0];
-  const stages = stagesFor(market);
 
-  useEffect(() => {
-    if (!busy) {
-      setStage(0);
-      return;
+  async function runPlain(trimmed: string): Promise<ResearchResult> {
+    const response = await fetch("/api/research", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: trimmed, market }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body?.error ?? "Research failed.");
+    return body as ResearchResult;
+  }
+
+  async function runStreamed(trimmed: string): Promise<ResearchResult> {
+    const response = await fetch("/api/research/stream", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: trimmed, market }),
+    });
+    if (!response.ok || !response.body) {
+      // The stream endpoint answers with JSON on validation/offline errors.
+      let message = "Research failed.";
+      try {
+        message = (await response.json())?.error ?? message;
+      } catch {
+        /* keep default */
+      }
+      throw new Error(message);
     }
-    const timers = stages.map((item, index) =>
-      window.setTimeout(() => setStage(index), item.at),
-    );
-    return () => timers.forEach(window.clearTimeout);
-  }, [busy, market]);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finalResult: ResearchResult | null = null;
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        let event: StreamEvent;
+        try {
+          event = JSON.parse(line) as StreamEvent;
+        } catch {
+          continue;
+        }
+        if (event.type === "result" && event.result) {
+          finalResult = event.result;
+        } else if (event.type === "error") {
+          throw new Error(event.message ?? "Research failed.");
+        } else {
+          setTheater((current) => (current ? applyEvent(current, event) : current));
+        }
+      }
+    }
+    if (!finalResult) throw new Error("The research stream ended without a result.");
+    return finalResult;
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,20 +193,28 @@ export function SearchConsole() {
     setError("");
     setResult(null);
     setBusy(true);
+    setTheater(emptyTheater(trimmed));
+    window.setTimeout(
+      () => theaterRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      120,
+    );
     try {
-      const response = await fetch("/api/research", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: trimmed, market }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body?.error ?? "Research failed.");
-      setResult(body as ResearchResult);
+      let body: ResearchResult;
+      try {
+        body = await runStreamed(trimmed);
+      } catch (streamError) {
+        // A missing stream route or a proxy that buffers should not kill the
+        // demo — the classic endpoint returns the same result without theater.
+        if (streamError instanceof TypeError) body = await runPlain(trimmed);
+        else throw streamError;
+      }
+      setResult(body);
       window.setTimeout(
         () => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-        80,
+        160,
       );
     } catch (caught) {
+      setTheater(null);
       setError(caught instanceof Error ? caught.message : "Research failed.");
     } finally {
       setBusy(false);
@@ -108,6 +257,7 @@ export function SearchConsole() {
                       setQuery("");
                       setError("");
                       setResult(null);
+                      setTheater(null);
                     }}
                     aria-pressed={market === item.code}
                     className={`min-h-10 px-5 text-sm font-semibold transition-colors ${
@@ -174,14 +324,14 @@ export function SearchConsole() {
               </button>
               <p id="query-hint" role="status" aria-live="polite" className="max-w-sm text-xs leading-5 text-muted">
                 {busy
-                  ? stages[stage].label
-                    : `Live posts, news, ${active.filings}, and price data are checked for every search.`}
+                  ? "Watch each source answer in real time below."
+                  : `Live posts, news, ${active.filings}, and price data are checked for every search.`}
               </p>
             </div>
 
-            {busy ? (
-              <div className="progress-rail mt-6" role="presentation">
-                <span style={{ width: `${((stage + 1) / stages.length) * 100}%` }} />
+            {theater ? (
+              <div ref={theaterRef}>
+                <AcquisitionConsole state={theater} done={!busy} />
               </div>
             ) : null}
 

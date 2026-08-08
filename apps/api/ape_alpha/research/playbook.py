@@ -70,7 +70,7 @@ def build_playbook(
         return Playbook(
             stance="STAND_ASIDE",
             rationale="The sources disagree about what is happening. Wait for a clearer picture instead of acting on conflicting information.",
-            entry_trigger="None. Re-run once the sources agree.",
+            entry_trigger="A re-run where the crowd, the news and the price point the same way.",
             invalidation="Not applicable — no position is contemplated.",
             time_stop_hours=0,
             max_nav_pct=0.0,
@@ -102,7 +102,9 @@ def build_playbook(
                 "and conversation is now slowing. The story looks late, so chasing it carries more risk "
                 "than opportunity."
             ),
-            entry_trigger="None on the long side at this phase.",
+            entry_trigger=(
+                "A fresh catalyst arriving after attention has cooled, with the recent run-up unwound."
+            ),
             invalidation="Not applicable — no position is contemplated.",
             time_stop_hours=0,
             max_nav_pct=0.0,
@@ -117,7 +119,9 @@ def build_playbook(
                 "Investor conversation, news, and price are all unusually active at the same time. The "
                 "market already knows the story, so there is no clear early advantage left."
             ),
-            entry_trigger="None. Revisit only if attention decays while the catalyst stays intact.",
+            entry_trigger=(
+                "Attention cooling off while the catalyst stays intact — that is when the edge can return."
+            ),
             invalidation="Not applicable — no position is contemplated.",
             time_stop_hours=0,
             max_nav_pct=0.0,

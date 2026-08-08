@@ -4,6 +4,7 @@ import type { ResearchResult } from "@/types/research";
 import { Reveal } from "@/components/ui/reveal";
 import { CausalTape } from "./causal-tape";
 import { CoverageStrip } from "./coverage-strip";
+import { DerivationStory } from "./derivation-story";
 import { EvidenceLedger } from "./evidence-ledger";
 import { NarrativeGap } from "./narrative-gap";
 import { PhaseBadge } from "./phase-badge";
@@ -27,6 +28,11 @@ export function ResultView({ result }: { result: ResearchResult }) {
   // a value would invert the reading, so those tiles show "—" instead.
   const socialMeasured = result.coverage.some(
     (status) => ["social", "reddit"].includes(status.source) && status.status === "live",
+  );
+  // Per-source outage lines already appear on the coverage strip; repeating
+  // them in the banner buries the warnings a reader cannot see elsewhere.
+  const materialWarnings = result.warnings.filter(
+    (warning) => !/^(social|news|filings|price):/.test(warning),
   );
 
   return (
@@ -62,6 +68,12 @@ export function ResultView({ result }: { result: ResearchResult }) {
         </Reveal>
       </section>
 
+      <section className="section-shell mt-12">
+        <Reveal delay={0.06}>
+          <DerivationStory result={result} socialMeasured={socialMeasured} />
+        </Reveal>
+      </section>
+
       {result.understanding ? (
         <section className="section-shell mt-12">
           <Reveal delay={0.08}>
@@ -70,13 +82,13 @@ export function ResultView({ result }: { result: ResearchResult }) {
         </section>
       ) : null}
 
-      {result.warnings.length > 0 ? (
+      {materialWarnings.length > 0 ? (
         <section className="section-shell mt-10">
           <Reveal>
             <div className="border-l-2 border-[var(--solar)] bg-[var(--solar-soft)] px-6 py-5">
               <p className="eyebrow text-ink">Read this first</p>
               <ul className="mt-3 grid gap-2 pl-5">
-                {result.warnings.map((warning) => (
+                {materialWarnings.map((warning) => (
                   <li key={warning} className="text-sm leading-6 text-ink">
                     {warning}
                   </li>

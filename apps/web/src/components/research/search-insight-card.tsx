@@ -11,21 +11,21 @@ const sentimentLabel: Record<ResearchResult["understanding"]["sentiment"], strin
 
 const actionCopy: Record<
   ResearchResult["snapshot"]["action"],
-  { label: string; short: "Buy" | "Watch" | "Avoid"; className: string }
+  { label: string; short: "Buy" | "Watch" | "Wait"; className: string }
 > = {
   PAPER_BUY: {
-    label: "Paper buy setup",
+    label: "Buying potential",
     short: "Buy",
     className: "border-[var(--up)] bg-[var(--up-soft)] text-[var(--up)]",
   },
   WATCH: {
-    label: "Watch for confirmation",
+    label: "Setup forming",
     short: "Watch",
     className: "border-[#df8b00] bg-[var(--solar-soft)] text-[#7a4d00]",
   },
   NO_TRADE: {
-    label: "Stand aside",
-    short: "Avoid",
+    label: "Priced in — wait",
+    short: "Wait",
     className: "border-[var(--down)] bg-[var(--down-soft)] text-[var(--down)]",
   },
 };
@@ -78,7 +78,7 @@ export function SearchInsightCard({ result }: { result: ResearchResult }) {
           </p>
 
           <div className="mt-7 grid grid-cols-3 gap-1 rounded-xl bg-white/8 p-1" aria-label="Rules-based action scale">
-            {(["Buy", "Watch", "Avoid"] as const).map((item) => (
+            {(["Buy", "Watch", "Wait"] as const).map((item) => (
               <div
                 key={item}
                 className={`rounded-lg px-2 py-2.5 text-center text-xs font-bold ${
@@ -89,6 +89,12 @@ export function SearchInsightCard({ result }: { result: ResearchResult }) {
               </div>
             ))}
           </div>
+          {result.snapshot.action !== "PAPER_BUY" ? (
+            <p className="mt-5 border-l-2 border-white/25 pl-4 text-xs leading-5 text-white/65">
+              <strong className="text-white/90">What flips this to a buy:</strong>{" "}
+              {result.playbook.entry_trigger}
+            </p>
+          ) : null}
           <p className="mt-3 text-[11px] leading-5 text-white/45">
             Research and paper trading only. This is not personal investment advice and does not place a trade.
           </p>
