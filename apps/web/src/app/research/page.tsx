@@ -5,17 +5,17 @@ import { SearchConsole } from "@/components/research/search-console";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Research",
-  description: "Run every live source against one security.",
+  title: "Check a stock",
+  description: "Turn live market signals into one clear stock read.",
 };
 
 export default function ResearchPage() {
   return (
     <>
       <PageHero
-        eyebrow="Live research"
-        title={<>One security. Every source. Right now.</>}
-        sub="Nothing is precomputed. Each query searches WebCMD Reddit, Google News and Yahoo News, then reads filings and price for that security and scores the distance between them."
+        eyebrow="Check a stock"
+        title={<>One search. The full market story.</>}
+        sub="We scan live investor conversations, news, company filings, and price action—then turn the evidence into a clear sentiment and next step."
       />
       <SearchConsole />
     </>

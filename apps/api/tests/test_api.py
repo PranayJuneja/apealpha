@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 from typing import Any
 
 import pytest
@@ -8,6 +9,8 @@ from fastapi.testclient import TestClient
 from ape_alpha import config as config_module
 from ape_alpha.api import app
 from ape_alpha.sources import sec
+
+resolve_module = importlib.import_module("ape_alpha.research.resolve")
 
 client = TestClient(app)
 
@@ -24,6 +27,7 @@ def offline_universe(monkeypatch: pytest.MonkeyPatch) -> None:
         }
 
     monkeypatch.setattr(sec, "load_universe", fake_universe)
+    monkeypatch.setattr(resolve_module, "load_universe", fake_universe)
     sec.reset_universe_cache()
 
 
@@ -32,7 +36,7 @@ def test_health_reports_which_credentials_are_present() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["mode"] == "paper-research"
-    assert set(body["credentials"]) == {"reddit", "webcmd", "alpaca", "groq"}
+    assert set(body["credentials"]) == {"reddit", "webcmd", "alpaca", "openai"}
 
 
 def test_source_health_lists_every_leg_with_a_status() -> None:
@@ -40,12 +44,14 @@ def test_source_health_lists_every_leg_with_a_status() -> None:
     names = {item["source"] for item in sources}
     assert {
         "WebCMD Reddit",
+        "WebCMD X",
         "WebCMD Google News",
         "WebCMD Yahoo News",
         "Reddit API fallback",
         "GDELT news",
         "SEC EDGAR",
         "Market bars",
+        "OpenAI analysis",
     } <= names
     assert all(item["status"] in {"ready", "unavailable"} for item in sources)
 

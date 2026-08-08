@@ -122,6 +122,20 @@ class SignalSnapshot(BaseModel):
     action: Literal["WATCH", "PAPER_BUY", "NO_TRADE"]
 
 
+class AIUnderstanding(BaseModel):
+    """A final evidence interpretation, separate from deterministic scoring."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sentiment: Literal["strongly_bearish", "bearish", "mixed", "bullish", "strongly_bullish"]
+    confidence: float = Field(ge=0, le=1)
+    summary: str
+    drivers: list[str] = Field(default_factory=list, max_length=4)
+    risks: list[str] = Field(default_factory=list, max_length=4)
+    source: Literal["openai", "rules"] = "rules"
+    model: str = "deterministic"
+
+
 class ResearchResult(BaseModel):
     """Everything one live run produced, including what it could not see."""
 
@@ -142,7 +156,8 @@ class ResearchResult(BaseModel):
     events: list[SourceEvent]
     coverage: list[SourceStatus]
     narrative: str = ""
-    narrative_source: Literal["rules", "groq"] = "rules"
+    narrative_source: Literal["rules", "openai"] = "rules"
+    understanding: AIUnderstanding
     warnings: list[str] = Field(default_factory=list)
 
 

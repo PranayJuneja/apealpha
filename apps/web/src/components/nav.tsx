@@ -62,7 +62,7 @@ export function Nav() {
               href={site.researchHref}
               className="nav-cta inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-5 text-[14px] font-bold tracking-[-0.02em] text-white"
             >
-              Run a ticker <span aria-hidden>↗</span>
+              Check a stock <span aria-hidden>↗</span>
             </Link>
           </div>
           <button
@@ -94,7 +94,7 @@ export function Nav() {
                 </Link>
               ))}
               <Link href={site.researchHref} onClick={() => setOpen(false)} tabIndex={open ? 0 : -1} className="button-primary mt-5">
-                Run a ticker
+                Check a stock
               </Link>
             </nav>
           </div>

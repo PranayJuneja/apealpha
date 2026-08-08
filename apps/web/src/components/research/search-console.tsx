@@ -4,17 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { markets } from "@/lib/site";
 import type { MarketCode, ResearchResult } from "@/types/research";
 import { ResultView } from "./result-view";
+import { SearchInsightCard } from "./search-insight-card";
 
 // The pipeline runs in this order, so the labels describe what is genuinely
 // happening rather than animating a meaningless bar.
 function stagesFor(market: MarketCode) {
-  const venue = market === "US" ? "SEC listing universe" : "NSE and BSE venue index";
   const filings = market === "US" ? "EDGAR" : "NSE announcements";
   return [
-    { at: 0, label: `Resolving the symbol against the ${venue}…` },
-    { at: 1800, label: `Searching Reddit, Google News, Yahoo News and ${filings} through the live pipeline…` },
-    { at: 6000, label: "Standardizing each layer and scoring the narrative gap…" },
-    { at: 11000, label: "Building the paper playbook…" },
+    { at: 0, label: "Finding the right company…" },
+    { at: 1800, label: `Checking investor posts, news, and ${filings}…` },
+    { at: 6000, label: "Comparing attention with the price move…" },
+    { at: 11000, label: "Turning the evidence into a next step…" },
+    { at: 14000, label: "Writing your plain-English summary…" },
   ];
 }
 
@@ -76,30 +77,27 @@ export function SearchConsole() {
       <section className="section-shell py-16 md:py-24" id="run">
         <div className="grid gap-14 lg:grid-cols-[.7fr_1.3fr] lg:gap-24">
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <p className="eyebrow text-muted">One security at a time.</p>
+            <p className="eyebrow text-muted">Live market check</p>
             <h2 className="h-display mt-5 text-[clamp(2.6rem,5vw,4.6rem)]">
-              Name it.
+              Search a stock.
               <br />
-              We read
-              <br />
-              everything.
+              See what
+              <br />changed.
             </h2>
             <div className="mt-9 border-t border-line pt-6 text-sm leading-6 text-muted">
               <p>
-                A symbol, a cashtag or a company name. The engine resolves it against the selected
-                market&apos;s listing universe, then searches Reddit, Google News, Yahoo News, filings and price for that
-                specific security.
+                Enter a ticker or company. We check what investors are saying, what trusted sources
+                confirm, and what the price already reflects—then show the next sensible move.
               </p>
               <p className="mt-3">
-                Nothing is precomputed and there is no watchlist of favourites. Every run is fetched when
-                you ask for it.
+                Every result is built from a fresh search and links back to the evidence behind it.
               </p>
             </div>
           </div>
 
           <form onSubmit={submit} noValidate className="border-t border-line-strong pt-10">
             <fieldset className="mb-9 border-0 p-0">
-              <legend className="eyebrow mb-3 text-muted">Listing venue</legend>
+              <legend className="eyebrow mb-3 text-muted">Market</legend>
               <div className="inline-flex flex-wrap border border-line-strong bg-white p-1">
                 {markets.map((item) => (
                   <button
@@ -121,7 +119,7 @@ export function SearchConsole() {
                 ))}
               </div>
               <p className="mt-3 text-xs leading-5 text-muted">
-                {active.currency} · measured against {active.benchmark} · filings from {active.filings}
+                Results compared with {active.benchmark} · company updates from {active.filings}
               </p>
             </fieldset>
 
@@ -171,13 +169,13 @@ export function SearchConsole() {
 
             <div className="mt-9 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
               <button type="submit" disabled={busy} className="button-primary w-full sm:w-auto">
-                {busy ? "Reading the tape…" : "Run the analysis"}
+                {busy ? "Checking live sources…" : "Analyze this stock"}
                 <span aria-hidden>{busy ? "◴" : "→"}</span>
               </button>
               <p id="query-hint" role="status" aria-live="polite" className="max-w-sm text-xs leading-5 text-muted">
                 {busy
                   ? stages[stage].label
-                    : `WebCMD Reddit, Google/Yahoo News, ${active.filings} and market bars, fetched live.`}
+                    : `Live posts, news, ${active.filings}, and price data are checked for every search.`}
               </p>
             </div>
 
@@ -186,11 +184,17 @@ export function SearchConsole() {
                 <span style={{ width: `${((stage + 1) / stages.length) * 100}%` }} />
               </div>
             ) : null}
+
+            {result ? (
+              <div ref={resultRef}>
+                <SearchInsightCard result={result} />
+              </div>
+            ) : null}
           </form>
         </div>
       </section>
 
-      <div ref={resultRef}>
+      <div>
         {result ? (
           <div className="border-t border-line bg-white/60">
             <ResultView result={result} />

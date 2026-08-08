@@ -41,8 +41,8 @@ page.on("requestfailed", (request) => {
 try {
   const home = await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 30_000 });
   if (!home?.ok()) throw new Error(`Dashboard returned HTTP ${home?.status() ?? "unknown"}`);
-  await page.getByRole("heading", { name: /Did the crowd/i }).waitFor();
-  await page.getByText("Who knew first?", { exact: true }).first().waitFor();
+  await page.getByRole("heading", { name: /Is this stock story/i }).waitFor();
+  await page.getByText("One search. One clear read.", { exact: true }).waitFor();
 
   await page.goto(`${baseUrl}/research`, { waitUntil: "networkidle", timeout: 30_000 });
   await page.getByLabel("Ticker or company").fill(query);
@@ -50,20 +50,30 @@ try {
     (response) => response.url().includes("/api/research") && response.request().method() === "POST",
     { timeout: 140_000 },
   );
-  await page.getByRole("button", { name: /Run the analysis/i }).click();
+  await page.getByRole("button", { name: /Analyze this stock/i }).click();
   const researchResponse = await pending;
   const researchBody = await researchResponse.json();
   if (!researchResponse.ok()) {
     throw new Error(`Research returned HTTP ${researchResponse.status()}: ${JSON.stringify(researchBody)}`);
   }
 
+  await page.getByText("Analysis complete", { exact: true }).waitFor({ timeout: 30_000 }).catch(async (error) => {
+    console.error(JSON.stringify({
+      researchKeys: Object.keys(researchBody || {}),
+      bodyText: (await page.locator("body").innerText()).slice(-4000),
+      consoleErrors,
+      failedRequests,
+    }, null, 2));
+    throw error;
+  });
   await page.locator(".phase-pill").first().waitFor({ timeout: 30_000 });
+  await page.getByText("Market sentiment", { exact: true }).first().waitFor();
   await page.getByRole("heading", { name: researchBody.company, exact: true }).waitFor();
-  await page.getByText("Every observation, timestamped.", { exact: true }).waitFor();
+  await page.getByText("Open any item to verify it.", { exact: true }).waitFor();
 
   const evidenceCount = await page.locator('a[target="_blank"]').count();
   const coverageCount = await page
-    .getByText("What this run could see", { exact: true })
+    .getByText("Sources checked", { exact: true })
     .locator("xpath=following::ul[1]/li")
     .count();
   const desktopScreenshot = path.join(outputDir, "ape-alpha-live-research.png");
@@ -71,11 +81,11 @@ try {
   await page.screenshot({ path: desktopScreenshot, fullPage: true });
 
   await page.goto(`${baseUrl}/sources`, { waitUntil: "networkidle", timeout: 30_000 });
-  await page.getByRole("heading", { name: /Every leg/i }).waitFor();
+  await page.getByRole("heading", { name: /See exactly what data/i }).waitFor();
   const sourceCards = await page.locator("main li").count();
 
   await page.goto(`${baseUrl}/lab`, { waitUntil: "networkidle", timeout: 30_000 });
-  await page.getByRole("heading", { name: /Does the rule survive/i }).waitFor();
+  await page.getByRole("heading", { name: /How did the strategy perform/i }).waitFor();
   const strategyRows = await page.locator("tbody tr").count();
 
   await page.setViewportSize({ width: 390, height: 844 });

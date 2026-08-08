@@ -8,6 +8,7 @@ import { EvidenceLedger } from "./evidence-ledger";
 import { NarrativeGap } from "./narrative-gap";
 import { PhaseBadge } from "./phase-badge";
 import { PlaybookCard } from "./playbook-card";
+import { UnderstandingCard } from "./understanding-card";
 
 function Metric({ label, value, note }: { label: string; value: string; note: string }) {
   return (
@@ -55,11 +56,19 @@ export function ResultView({ result }: { result: ResearchResult }) {
         <Reveal delay={0.06}>
           <p className="mt-8 max-w-4xl text-[1.15rem] leading-8 text-ink">{result.narrative}</p>
           <p className="mt-4 text-xs text-muted">
-            {copy.summary} Narrative written by {result.narrative_source === "groq" ? "the language layer" : "deterministic rules"};
-            the stance below always comes from rules.
+            {copy.summary} The summary is written by {result.narrative_source === "openai" ? "GPT-5.6 Luna" : "fixed rules"};
+            the action always comes from fixed rules.
           </p>
         </Reveal>
       </section>
+
+      {result.understanding ? (
+        <section className="section-shell mt-12">
+          <Reveal delay={0.08}>
+            <UnderstandingCard understanding={result.understanding} />
+          </Reveal>
+        </section>
+      ) : null}
 
       {result.warnings.length > 0 ? (
         <section className="section-shell mt-10">
@@ -89,45 +98,45 @@ export function ResultView({ result }: { result: ResearchResult }) {
 
       <section className="section-shell mt-16">
         <Reveal>
-          <p className="eyebrow text-muted">Signal detail</p>
+          <p className="eyebrow text-muted">Why the engine says this</p>
           <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             <Metric
-              label="Social acceleration"
+              label="Conversation growth"
               value={socialMeasured ? `${features.social_acceleration.toFixed(2)}×` : "—"}
               note={socialMeasured ? "vs the prior six-day mean" : "social leg did not report"}
             />
             <Metric
-              label="Distinct authors"
+              label="People discussing it"
               value={socialMeasured ? String(features.unique_authors) : "—"}
               note={socialMeasured ? `across ${features.social_count} posts in 24h` : "social leg did not report"}
             />
             <Metric
-              label="Analysis density"
+              label="Useful discussion"
               value={socialMeasured ? percent(features.dd_density, 0) : "—"}
               note={socialMeasured ? "share of posts carrying argument" : "social leg did not report"}
             />
             <Metric
-              label="Bullish share"
+              label="Positive sentiment"
               value={socialMeasured ? percent(features.bull_ratio, 0) : "—"}
               note={socialMeasured ? "directional language only" : "social leg did not report"}
             />
             <Metric
-              label="Catalyst quality"
+              label="Confirmed catalyst"
               value={percent(features.catalyst_quality, 0)}
               note={features.filing_confirmed ? "material filing inside 72h" : "no recent filing"}
             />
             <Metric
-              label="Coverage novelty"
+              label="New information"
               value={percent(features.novelty, 0)}
               note={`${features.news_count} articles, duplicates removed`}
             />
             <Metric
-              label="Relative volume"
+              label="Trading activity"
               value={`${features.relative_volume.toFixed(2)}×`}
               note={`${features.price_resolution} bars`}
             />
             <Metric
-              label="Already priced"
+              label="Recent price move"
               value={features.already_pumped_penalty.toFixed(2)}
               note={`${signedPercent(features.pre_signal_return)} over the prior five bars`}
             />
@@ -137,7 +146,7 @@ export function ResultView({ result }: { result: ResearchResult }) {
 
       <section className="section-shell mt-16">
         <Reveal>
-          <p className="eyebrow text-muted">What this run could see</p>
+          <p className="eyebrow text-muted">Sources checked</p>
           <div className="mt-5">
             <CoverageStrip coverage={result.coverage} />
           </div>
@@ -152,11 +161,11 @@ export function ResultView({ result }: { result: ResearchResult }) {
 
       <section className="section-shell mt-20 grid gap-12 lg:grid-cols-[.5fr_1.5fr] lg:gap-20">
         <Reveal>
-          <p className="eyebrow text-muted">Evidence ledger</p>
-          <h3 className="h-display mt-4 text-[clamp(1.8rem,3vw,2.6rem)]">Every observation, timestamped.</h3>
+          <p className="eyebrow text-muted">Sources behind this read</p>
+          <h3 className="h-display mt-4 text-[clamp(1.8rem,3vw,2.6rem)]">Open any item to verify it.</h3>
           <p className="mt-5 text-sm leading-6 text-muted">
-            {result.events.length} records. Each links to its source so any number above can be traced back
-            to the thing that produced it.
+            {result.events.length} items, ordered by time. Each one links to the original source behind the
+            result.
           </p>
           <p className="tabular mt-6 text-[11px] leading-5 text-muted">
             SNAPSHOT {snapshot.snapshot_id}

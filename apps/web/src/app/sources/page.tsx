@@ -7,11 +7,17 @@ import type { SourceHealth } from "@/types/research";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Source health",
-  description: "What each acquisition leg can currently do.",
+  title: "Live sources",
+  description: "See which data sources are ready for the next stock check.",
 };
 
 const SETUP = [
+  {
+    source: "WebCMD X",
+    env: [],
+    how: "Install the Twitter WebCMD plugin, then run `webcmd twitter login` once and complete login yourself. Each run searches current X posts without exposing the session to Ape Alpha.",
+    without: "Reddit can keep the social leg live, but X sentiment and reach are absent and the partial coverage is disclosed.",
+  },
   {
     source: "WebCMD Reddit",
     env: [],
@@ -31,10 +37,10 @@ const SETUP = [
     without: "Price falls back to Yahoo daily bars. Everything still works at end-of-day resolution.",
   },
   {
-    source: "Groq",
-    env: ["GROQ_API_KEY"],
-    how: "Optional narrative layer that writes prose about the computed metrics.",
-    without: "Deterministic rule-written narrative is used instead. The stance is unaffected either way.",
+    source: "OpenAI GPT-5.6 Luna",
+    env: ["OPENAI_API_KEY"],
+    how: "One structured call writes the narrative and interprets measured sentiment, drivers and risks after deterministic scoring.",
+    without: "The narrative and final understanding use transparent deterministic fallbacks. The stance and metrics are unaffected.",
   },
   {
     source: "WebCMD Google + Yahoo News",
@@ -62,17 +68,17 @@ export default async function SourcesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Source health"
-        title={<>Every leg, and what happens when one goes dark.</>}
-        sub="No Reddit API approval is required. The authorized WebCMD session and every keyless provider are reported explicitly rather than silently zeroed."
+        eyebrow="Live data check"
+        title={<>See exactly what data is working right now.</>}
+        sub="Every source reports its status. If something is unavailable, APE Alpha shows the gap instead of quietly treating missing data as no activity."
       />
 
       <section className="section-shell py-16 md:py-24">
         <Reveal>
-          <p className="eyebrow text-muted">Configuration readiness</p>
+          <p className="eyebrow text-muted">Current status</p>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
-            Ready means no local setup is missing. Upstream availability is measured again on every
-            research run, and that run&apos;s coverage strip is the authoritative status.
+            Green means ready. Every stock search checks again and shows which sources answered that
+            specific request.
           </p>
           {error ? (
             <p className="mt-5 max-w-2xl border-l-2 border-[var(--solar)] bg-[var(--solar-soft)] px-5 py-4 text-sm leading-6 text-ink">
@@ -102,7 +108,7 @@ export default async function SourcesPage() {
           <div className="mt-20">
             <p className="eyebrow text-muted">Setup</p>
             <h2 className="h-display mt-5 max-w-3xl text-[clamp(2rem,3.5vw,3.2rem)]">
-              What each key buys you.
+              How each source helps.
             </h2>
             <ul className="mt-10 grid list-none gap-0 border-t border-line-strong p-0">
               {SETUP.map((item) => (
@@ -118,7 +124,7 @@ export default async function SourcesPage() {
                   <div>
                     <p className="text-sm leading-6 text-ink">{item.how}</p>
                     <p className="mt-3 text-sm leading-6 text-muted">
-                      <span className="font-semibold text-ink">Without it: </span>
+                      <span className="font-semibold text-ink">If unavailable: </span>
                       {item.without}
                     </p>
                   </div>

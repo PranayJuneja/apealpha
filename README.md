@@ -5,7 +5,7 @@ news and price confirmed it — or long after everyone had already paid for it.
 
 You pick a market (**US** or **India**), then type a ticker, a cashtag or a
 company name. The engine resolves it against that market's listing universe,
-then asks WebCMD for current Reddit, Google News and Yahoo News evidence, reads
+then asks WebCMD for current X, Reddit, Google News and Yahoo News evidence, reads
 filings and market bars for that specific security, standardizes each layer,
 and reports the distance between them. Nothing is precomputed.
 
@@ -21,13 +21,15 @@ npm install -g @agentrhq/webcmd
 npm run webcmd:setup:arm64  # Windows ARM64 only; installs a checksum-verified x64 Node runtime
 npm run webcmd -- reddit login
 npm run webcmd -- reddit whoami
+npm run webcmd -- twitter login
+npm run webcmd -- twitter whoami
 Copy-Item .env.example .env    # optional, see "What each key buys you"
 npm run api                    # terminal 1
 npm run dev                    # terminal 2
 ```
 
-Open `http://localhost:3000`, pick a market and run a ticker. Reddit uses the
-one-time WebCMD login above; no Reddit API approval is required. Google News,
+Open `http://localhost:3000`, pick a market and run a ticker. X and Reddit use the
+one-time WebCMD logins above; no social API approval is required. Google News,
 Yahoo News, GDELT, SEC/NSE filings and Yahoo price bars are keyless.
 
 ## Commands
@@ -46,6 +48,7 @@ listings.
 | `npm run manifest` | What the point-in-time store currently holds |
 | `npm run backtest` | Evaluate the fixed rules against the store |
 | `npm run webcmd -- reddit whoami` | Verify the Reddit session used by live research |
+| `npm run webcmd -- twitter whoami` | Verify the X session used by live research |
 | `npm run webcmd -- ape-alpha yahoo-news "Palantir Technologies" --ticker PLTR` | Inspect normalized Yahoo news directly |
 | `npm test` | Frontend, adapter and API test suites |
 
@@ -57,13 +60,14 @@ Every credential is optional and disables exactly one source when absent. The
 | Source | Keys | Without it |
 | --- | --- | --- |
 | WebCMD Reddit session | no key; `npm run webcmd -- reddit login` | Social leg goes dark; gap metrics become partial and no paper position can be sized |
+| WebCMD X session | no key; `npm run webcmd -- twitter login` | Reddit can keep social coverage live, but X posts are absent and disclosed |
 | Reddit API fallback | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT` | Nothing if WebCMD Reddit is healthy; these are optional fallback credentials |
 | Alpaca | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | Price falls back to Yahoo daily bars; intraday timing is unrepresented |
-| Groq | `GROQ_API_KEY` | Deterministic rule-written narrative is used instead; stance is unaffected |
+| OpenAI GPT-5.6 Luna | `OPENAI_API_KEY` | Deterministic narrative and final understanding are used; stance and metrics are unaffected |
 | WebCMD Google/Yahoo News, GDELT, SEC EDGAR, NSE, Yahoo bars | none | No setup required; a transient outage is surfaced as degraded coverage |
 
-The normal pathway does not wait for Reddit Data API approval: WebCMD searches
-through the account session you authorize interactively. It never automates a
+The normal pathway does not wait for social API approval: WebCMD searches
+through the X and Reddit account sessions you authorize interactively. It never automates a
 password, OTP or CAPTCHA, and the application never receives the session
 cookie. If approved later, Reddit's
 [official access guidance](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data)
@@ -106,8 +110,8 @@ social-dependent rule against a row where the social leg was dark.
 - **News and price history is real.** GDELT supports absolute windows back to
   2017 and market bars go back years, so `npm run backfill` reconstructs genuine
   historical observations for both legs.
-- **Social history is not obtainable.** Reddit publishes no licensed deep
-  archive and Pushshift is restricted to moderators. The social leg accrues
+- **Social history is not obtainable.** The connected X and Reddit surfaces do
+  not provide the licensed deep archive required for reconstruction. The social leg accrues
   forward from the moment you start running the engine. Backfilled rows are
   marked `origin="backfill"` with `social_coverage="unavailable"` so they can
   never be mistaken for runs that saw it.
@@ -128,7 +132,7 @@ social-dependent rule against a row where the social leg was dark.
 ```
 apps/api/ape_alpha/
   markets.py    venue profiles — benchmark, currency, filings, subreddits
-  sources/      adapters — WebCMD Reddit/news, GDELT, market, SEC, NSE, lookup
+  sources/      adapters — WebCMD X/Reddit/news, GDELT, market, SEC, NSE, lookup
   research/     resolve, features, playbook, llm, engine
   store.py      append-only point-in-time snapshot store
   backfill.py   real historical reconstruction

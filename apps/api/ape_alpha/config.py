@@ -48,8 +48,14 @@ class Settings:
     )
     alpaca_key: str = field(default_factory=lambda: _env("ALPACA_API_KEY"))
     alpaca_secret: str = field(default_factory=lambda: _env("ALPACA_SECRET_KEY"))
-    groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY"))
-    groq_model: str = field(default_factory=lambda: _env("GROQ_MODEL", "llama-3.3-70b-versatile"))
+    openai_api_key: str = field(default_factory=lambda: _env("OPENAI_API_KEY"))
+    openai_model: str = field(default_factory=lambda: _env("OPENAI_MODEL", "gpt-5.6-luna"))
+    openai_reasoning_effort: str = field(
+        default_factory=lambda: _env("OPENAI_REASONING_EFFORT", "low").lower()
+    )
+    openai_timeout_seconds: float = field(
+        default_factory=lambda: float(_env("OPENAI_TIMEOUT", "45") or 45)
+    )
     sec_user_agent: str = field(
         default_factory=lambda: _env("SEC_USER_AGENT", "APE Alpha research contact@example.com")
     )
@@ -68,8 +74,8 @@ class Settings:
         return bool(self.alpaca_key and self.alpaca_secret)
 
     @property
-    def groq_enabled(self) -> bool:
-        return bool(self.groq_api_key)
+    def openai_enabled(self) -> bool:
+        return bool(self.openai_api_key)
 
 
 _settings: Settings | None = None

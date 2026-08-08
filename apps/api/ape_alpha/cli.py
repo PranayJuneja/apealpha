@@ -44,7 +44,7 @@ def main() -> None:
 
     research_parser = subparsers.add_parser("research", help="Run live research for one query")
     research_parser.add_argument("query", help="Ticker, cashtag or company name")
-    research_parser.add_argument("--no-llm", action="store_true", help="Skip the Groq narrative layer")
+    research_parser.add_argument("--no-llm", action="store_true", help="Skip the GPT-5.6 Luna analysis layer")
     research_parser.add_argument("--market", choices=["US", "IN"], default="US", help="Listing venue")
 
     backfill_parser = subparsers.add_parser("backfill", help="Reconstruct real news and price history")

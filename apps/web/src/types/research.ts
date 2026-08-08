@@ -75,6 +75,16 @@ export type SignalSnapshot = {
   action: "WATCH" | "PAPER_BUY" | "NO_TRADE";
 };
 
+export type AIUnderstanding = {
+  sentiment: "strongly_bearish" | "bearish" | "mixed" | "bullish" | "strongly_bullish";
+  confidence: number;
+  summary: string;
+  drivers: string[];
+  risks: string[];
+  source: "openai" | "rules";
+  model: string;
+};
+
 export type MarketCode = "US" | "IN";
 
 export type ResearchResult = {
@@ -93,7 +103,8 @@ export type ResearchResult = {
   events: SourceEvent[];
   coverage: SourceStatus[];
   narrative: string;
-  narrative_source: "rules" | "groq";
+  narrative_source: "rules" | "openai";
+  understanding: AIUnderstanding;
   warnings: string[];
 };
 

@@ -18,34 +18,33 @@ export function Footer() {
               APE <span className="ml-1.5 font-medium text-[#6f7b90]">Alpha</span>
             </Link>
             <p className="mt-5 max-w-xs text-sm leading-6 text-[#526078]">
-              A narrative research engine. It measures whether attention found a story before the market
-              priced it — or long after.
+              APE Alpha turns live market conversation, news, filings, and price action into a clear
+              sentiment and next step.
             </p>
           </div>
 
           <nav aria-label="Product links">
             <p className="eyebrow text-[#8994a6]">Product</p>
             <ul className="mt-5 space-y-1">
-              <li><Link href={site.researchHref} className={linkClass}>Research a ticker</Link></li>
-              <li><Link href={site.labHref} className={linkClass}>Validation lab</Link></li>
-              <li><Link href={site.sourcesHref} className={linkClass}>Source health</Link></li>
+              <li><Link href={site.researchHref} className={linkClass}>Check a stock</Link></li>
+              <li><Link href={site.labHref} className={linkClass}>See the track record</Link></li>
+              <li><Link href={site.sourcesHref} className={linkClass}>See live sources</Link></li>
             </ul>
           </nav>
 
           <nav aria-label="Method links">
-            <p className="eyebrow text-[#8994a6]">Method</p>
+            <p className="eyebrow text-[#8994a6]">Learn</p>
             <ul className="mt-5 space-y-1">
-              <li><Link href="/method" className={linkClass}>Narrative gap</Link></li>
-              <li><Link href="/method#coverage" className={linkClass}>Data coverage</Link></li>
-              <li><Link href="/method#limits" className={linkClass}>Known limits</Link></li>
+              <li><Link href="/method" className={linkClass}>How it works</Link></li>
+              <li><Link href="/method#coverage" className={linkClass}>What data it checks</Link></li>
+              <li><Link href="/method#limits" className={linkClass}>What it cannot know</Link></li>
             </ul>
           </nav>
 
           <div>
             <p className="eyebrow text-[#8994a6]">Status</p>
             <p className="mt-5 max-w-xs text-sm leading-6 text-[#526078]">
-              Research and paper trading only. There is no live-money execution path in this system, by
-              design.
+              Research and simulated plans only. APE Alpha cannot place a real trade or move your money.
             </p>
           </div>
         </div>

@@ -8,8 +8,8 @@ import type { Backtest } from "@/types/research";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Validation lab",
-  description: "Fixed rules evaluated against the real point-in-time store.",
+  title: "Track record",
+  description: "How the fixed rules performed on historical market data.",
 };
 
 const MODE_COPY = {
@@ -21,8 +21,8 @@ const MODE_COPY = {
 function EmptyState({ reason }: { reason: string }) {
   return (
     <div className="glass p-10">
-      <p className="eyebrow text-muted">Nothing to show yet</p>
-      <h2 className="h-display mt-5 text-[clamp(1.8rem,3vw,2.6rem)]">The store has not been built.</h2>
+      <p className="eyebrow text-muted">No test results yet</p>
+      <h2 className="h-display mt-5 text-[clamp(1.8rem,3vw,2.6rem)]">Build the history to see performance.</h2>
       <p className="mt-5 max-w-xl text-sm leading-6 text-muted">{reason}</p>
       <pre className="mt-8 overflow-x-auto border border-line bg-white p-5 text-xs leading-6 text-ink">
         <code>
@@ -49,7 +49,7 @@ function StrategyTable({ backtest }: { backtest: Backtest }) {
       <table className="w-full min-w-[46rem] border-collapse text-left">
         <thead>
           <tr className="border-b border-line-strong">
-            {["Strategy", "Signals", "Win rate", "Mean excess", "95% interval", "Max drawdown"].map((head) => (
+            {["Strategy", "Trades", "Won", "Average edge vs market", "Likely range", "Worst drop"].map((head) => (
               <th key={head} className="eyebrow py-4 pr-6 font-semibold text-muted">
                 {head}
               </th>
@@ -105,9 +105,9 @@ export default async function LabPage() {
   return (
     <>
       <PageHero
-        eyebrow="Validation lab"
-        title={<>Does the rule survive contact with real data?</>}
-        sub="Fixed thresholds, never fitted. Entry is the next bar's open, returns are excess of each listing's own market benchmark, and costs are charged on both sides."
+        eyebrow="Performance proof"
+        title={<>How did the strategy perform on real past data?</>}
+        sub="See every simulated signal, win rate, and worst loss. The rules stay fixed, so the test cannot be tuned after the result is known."
       />
 
       <section className="section-shell py-16 md:py-24">
@@ -162,7 +162,7 @@ export default async function LabPage() {
 
             <Reveal delay={0.14}>
               <div className="mt-14 border-t border-line pt-8">
-                <p className="eyebrow text-muted">Caveats</p>
+                  <p className="eyebrow text-muted">What to keep in mind</p>
                 <ul className="mt-5 grid gap-3 pl-5">
                   {backtest.caveats.map((caveat) => (
                     <li key={caveat} className="max-w-3xl text-sm leading-6 text-muted">

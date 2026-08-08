@@ -39,7 +39,7 @@ export function NarrativeGap({
   return (
     <figure className="m-0">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-4">
-        <p className="eyebrow text-muted">Narrative gap — social versus news</p>
+        <p className="eyebrow text-muted">Is the crowd ahead or late?</p>
         {socialMeasured ? (
           <p className={`stat-value ${features.social_news_gap >= 0 ? "text-up" : "text-down"}`}>
             {sigma(features.social_news_gap)}
@@ -51,8 +51,8 @@ export function NarrativeGap({
 
       {socialMeasured ? null : (
         <p className="mt-4 border-l-2 border-[var(--solar)] bg-[var(--solar-soft)] px-4 py-3 text-sm leading-6 text-ink">
-          The social leg did not report. Reddit shows as unmeasured below rather than as zero, and no gap
-          is computed — an unmeasured layer is not a quiet one.
+          Reddit did not return data for this search. It is shown as unavailable rather than zero because
+          missing data does not mean nobody is talking.
         </p>
       )}
 

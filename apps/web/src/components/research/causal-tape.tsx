@@ -55,8 +55,8 @@ export function CausalTape({ events }: { events: SourceEvent[] }) {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="eyebrow text-muted">Causal tape — UTC</p>
-          <h3 className="h-display mt-3 text-[clamp(1.8rem,3vw,2.6rem)]">Who knew first?</h3>
+          <p className="eyebrow text-muted">How the story unfolded — UTC</p>
+          <h3 className="h-display mt-3 text-[clamp(1.8rem,3vw,2.6rem)]">What moved first?</h3>
         </div>
         <div className="flex items-center gap-4">
           <button
