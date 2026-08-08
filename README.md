@@ -5,9 +5,9 @@ news and price confirmed it — or long after everyone had already paid for it.
 
 You pick a market (**US** or **India**), then type a ticker, a cashtag or a
 company name. The engine resolves it against that market's listing universe,
-then reads Reddit, world news, filings and market bars for that specific
-security, standardizes each layer, and reports the distance between them.
-Nothing is precomputed.
+then asks WebCMD for current Reddit, Google News and Yahoo News evidence, reads
+filings and market bars for that specific security, standardizes each layer,
+and reports the distance between them. Nothing is precomputed.
 
 Research and paper trading only. There is no broker integration and no code path
 to one.
@@ -17,14 +17,18 @@ to one.
 ```powershell
 python -m pip install -e ".\apps\api[dev]"
 npm install
+npm install -g @agentrhq/webcmd
+npm run webcmd:setup:arm64  # Windows ARM64 only; installs a checksum-verified x64 Node runtime
+npm run webcmd -- reddit login
+npm run webcmd -- reddit whoami
 Copy-Item .env.example .env    # optional, see "What each key buys you"
 npm run api                    # terminal 1
 npm run dev                    # terminal 2
 ```
 
-Open `http://localhost:3000`, pick a market and run a ticker. It works with no
-credentials at all — Google News, GDELT, SEC/NSE filings and Yahoo price bars
-are all keyless.
+Open `http://localhost:3000`, pick a market and run a ticker. Reddit uses the
+one-time WebCMD login above; no Reddit API approval is required. Google News,
+Yahoo News, GDELT, SEC/NSE filings and Yahoo price bars are keyless.
 
 ## Commands
 
@@ -41,6 +45,8 @@ listings.
 | `npm run backfill -- infosys --market IN` | Indian history, benchmarked against Nifty 50 |
 | `npm run manifest` | What the point-in-time store currently holds |
 | `npm run backtest` | Evaluate the fixed rules against the store |
+| `npm run webcmd -- reddit whoami` | Verify the Reddit session used by live research |
+| `npm run webcmd -- ape-alpha yahoo-news "Palantir Technologies" --ticker PLTR` | Inspect normalized Yahoo news directly |
 | `npm test` | Frontend, adapter and API test suites |
 
 ## What each key buys you
@@ -50,14 +56,18 @@ Every credential is optional and disables exactly one source when absent. The
 
 | Source | Keys | Without it |
 | --- | --- | --- |
-| Reddit | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT` | Social leg goes dark; gap metrics become partial and no paper position can be sized |
+| WebCMD Reddit session | no key; `npm run webcmd -- reddit login` | Social leg goes dark; gap metrics become partial and no paper position can be sized |
+| Reddit API fallback | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT` | Nothing if WebCMD Reddit is healthy; these are optional fallback credentials |
 | Alpaca | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | Price falls back to Yahoo daily bars; intraday timing is unrepresented |
 | Groq | `GROQ_API_KEY` | Deterministic rule-written narrative is used instead; stance is unaffected |
-| GDELT, Google News, SEC EDGAR, NSE, Yahoo | none | No setup required; a transient outage is surfaced as degraded coverage |
+| WebCMD Google/Yahoo News, GDELT, SEC EDGAR, NSE, Yahoo bars | none | No setup required; a transient outage is surfaced as degraded coverage |
 
-Reddit access requires an approved Data API application. Start from Reddit's
-[official access guidance](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data), then copy the approved server-side
-credentials into `.env`. Never expose the client secret to the browser.
+The normal pathway does not wait for Reddit Data API approval: WebCMD searches
+through the account session you authorize interactively. It never automates a
+password, OTP or CAPTCHA, and the application never receives the session
+cookie. If approved later, Reddit's
+[official access guidance](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data)
+can be used to configure the optional server-side OAuth fallback.
 
 ## Markets
 
@@ -71,17 +81,21 @@ credentials into `.env`. Never expose the client secret to the browser.
 
 ## News sources
 
-Two providers, kept for different reasons:
+Three providers, kept for different reasons:
 
-- **Google News** is the precision leg. It is region- and language-scoped, so an
-  Indian listing returns Indian press. It has **no archive** — current window only.
+- **Google News through WebCMD** is the locale-aware current-news precision leg,
+  so an Indian listing returns Indian press. It has **no archive** — current
+  window only.
+- **Yahoo News through WebCMD** is a second current-news leg. Rows must mention
+  the resolved ticker/company in the headline; broad market stories are not
+  counted just because Yahoo associates the ticker in hidden metadata.
 - **GDELT** is the history leg. It supports absolute windows back to 2017 and a
   volume timeline, which is the baseline `news_z` is measured against and the
   only thing that makes a historical backfill possible.
 
 Stories are merged and de-duplicated on headline-plus-day, so a story carried by
-both providers is counted once. Yahoo's news endpoint was evaluated and rejected:
-it is not ticker-scoped and returns unrelated headlines.
+multiple providers is counted once. Google or Yahoo can fail independently; the
+coverage line records exactly which WebCMD commands answered on that run.
 
 ## Data honesty
 
@@ -114,7 +128,7 @@ social-dependent rule against a row where the social leg was dark.
 ```
 apps/api/ape_alpha/
   markets.py    venue profiles — benchmark, currency, filings, subreddits
-  sources/      adapters — reddit, gdelt, google_news, market, sec, nse, lookup
+  sources/      adapters — WebCMD Reddit/news, GDELT, market, SEC, NSE, lookup
   research/     resolve, features, playbook, llm, engine
   store.py      append-only point-in-time snapshot store
   backfill.py   real historical reconstruction

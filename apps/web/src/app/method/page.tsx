@@ -17,7 +17,7 @@ const STEPS = [
   {
     number: "02",
     title: "Acquire",
-    body: "Reddit, Google News, GDELT, the market's filing source and price bars are fetched concurrently, each under a wall-clock budget. A failure or timeout in one leg is isolated: the run continues and records that leg as degraded or unavailable rather than substituting a zero. The two news providers are merged and de-duplicated so a story carried by both counts once.",
+    body: "Every query asks WebCMD to search the authorized Reddit session plus current Google News and Yahoo News. GDELT's historical baseline, the market's filing source and price bars are fetched concurrently under wall-clock budgets. A failure in one provider is isolated and recorded rather than converted to zero; duplicate headlines are counted once.",
   },
   {
     number: "03",
@@ -55,7 +55,7 @@ const LIMITS = [
   ],
   [
     "Coverage is not evidence of absence",
-    "GDELT indexes a very large share of world news but not all of it. A quiet news z-score means the sources read were quiet.",
+    "Google News, Yahoo News and GDELT index large but incomplete slices of coverage. A quiet news z-score means the sources that answered were quiet; the coverage strip states which ones answered.",
   ],
   [
     "Nothing here is advice",

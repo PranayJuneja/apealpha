@@ -9,8 +9,34 @@ const fixture = async (name) => JSON.parse(await readFile(path.join(here, 'fixtu
 
 beforeAll(async () => {
   await import('../gdelt-news.js');
+  await import('../google-news.js');
+  await import('../yahoo-news.js');
   await import('../sec-filings.js');
   await import('../ir-latest.js');
+});
+
+describe('current news adapters', () => {
+  it('normalizes and filters Google News RSS rows', async () => {
+    const body = await readFile(path.join(here, 'fixtures', 'google-news.xml'), 'utf8');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(body, { status: 200, headers: { 'content-type': 'application/rss+xml' } })));
+    const definition = command('google-news');
+    const rows = await definition.func({ query: 'Palantir Technologies Inc.', ticker: 'PLTR', language: 'en-US', country: 'US', ceid: 'US:en', limit: 10 });
+    expect(rows).toHaveLength(1);
+    expect(Object.keys(rows[0])).toEqual(definition.columns);
+    expect(rows[0].provider).toBe('google-news');
+    expect(rows[0].title).toContain('Palantir');
+  });
+
+  it('keeps only Yahoo stories related to the resolved ticker', async () => {
+    const body = await fixture('yahoo-news.json');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } })));
+    const definition = command('yahoo-news');
+    const rows = await definition.func({ query: 'Palantir Technologies Inc.', ticker: 'PLTR', limit: 10 });
+    expect(rows).toHaveLength(1);
+    expect(Object.keys(rows[0])).toEqual(definition.columns);
+    expect(rows[0].provider).toBe('yahoo-news');
+    expect(rows[0].title).toContain('Palantir');
+  });
 });
 
 afterEach(() => vi.unstubAllGlobals());

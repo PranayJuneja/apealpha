@@ -7,13 +7,19 @@ from ..contracts import NarrativePhase, Playbook, SignalFeatures, SourceStatus
 MAX_NAV_PCT = 0.01
 
 
+def _social_live(coverage: list[SourceStatus]) -> bool:
+    # `reddit` is retained for old stored/test rows; new live runs call the
+    # current WebCMD Reddit acquisition leg `social`.
+    return any(status.source in {"social", "reddit"} and status.status == "live" for status in coverage)
+
+
 def _risks(features: SignalFeatures, coverage: list[SourceStatus]) -> list[str]:
     risks: list[str] = []
     dark = [status.source for status in coverage if status.status != "live"]
     if dark:
         risks.append(f"Computed without {', '.join(dark)}. Treat the affected metrics as partial.")
 
-    social_live = any(status.source == "reddit" and status.status == "live" for status in coverage)
+    social_live = _social_live(coverage)
     price_live = any(status.source == "price" and status.status == "live" for status in coverage)
 
     if price_live and features.already_pumped_penalty >= 0.4:
@@ -57,7 +63,7 @@ def build_playbook(
     # Anything other than a live social leg blocks sizing. A degraded fetch is
     # no more trustworthy than a missing credential when the whole thesis rests
     # on measuring social lead.
-    social_dark = not any(status.source == "reddit" and status.status == "live" for status in coverage)
+    social_dark = not _social_live(coverage)
     risks = _risks(features, coverage)
 
     if conflict:
@@ -77,8 +83,8 @@ def build_playbook(
             stance="WATCH",
             rationale=(
                 "The social leg is dark, so the narrative gap cannot be measured. What is shown below is "
-                "news and price only: a zero social score here means unmeasured, not quiet. Connect Reddit "
-                "credentials to get a phase at all."
+                "news and price only: a zero social score here means unmeasured, not quiet. Connect an "
+                "authorized WebCMD social session or Reddit API fallback to get a phase at all."
             ),
             entry_trigger="None until the social leg reports. The engine will not size a position it cannot measure.",
             invalidation="Not applicable — no position is contemplated.",

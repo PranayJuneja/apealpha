@@ -42,6 +42,10 @@ class Settings:
     reddit_user_agent: str = field(
         default_factory=lambda: _env("REDDIT_USER_AGENT", "python:ape-alpha:0.2.0 (research)")
     )
+    social_mode: str = field(default_factory=lambda: _env("APE_SOCIAL_MODE", "auto").lower())
+    webcmd_timeout_seconds: float = field(
+        default_factory=lambda: float(_env("APE_WEBCMD_TIMEOUT", "22") or 22)
+    )
     alpaca_key: str = field(default_factory=lambda: _env("ALPACA_API_KEY"))
     alpaca_secret: str = field(default_factory=lambda: _env("ALPACA_SECRET_KEY"))
     groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY"))

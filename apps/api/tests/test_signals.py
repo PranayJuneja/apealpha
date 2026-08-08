@@ -33,7 +33,7 @@ def features(**overrides) -> SignalFeatures:
 
 def live_coverage() -> list[SourceStatus]:
     return [
-        SourceStatus(source="reddit", status="live", provider="reddit-oauth", events=45),
+        SourceStatus(source="social", status="live", provider="webcmd-reddit", events=45),
         SourceStatus(source="news", status="live", provider="gdelt", events=2),
         SourceStatus(source="price", status="live", provider="stooq", events=180),
         SourceStatus(source="filings", status="live", provider="sec-edgar", events=1),
@@ -98,7 +98,7 @@ def test_qualifying_signal_produces_a_capped_paper_long() -> None:
 @pytest.mark.parametrize("status", ["unavailable", "degraded"])
 def test_a_social_leg_that_is_not_live_can_never_produce_a_position(status: str) -> None:
     coverage = live_coverage()
-    coverage[0] = SourceStatus(source="reddit", status=status, detail="no usable data")  # type: ignore[arg-type]
+    coverage[0] = SourceStatus(source="social", status=status, detail="no usable data")  # type: ignore[arg-type]
     plan = build_playbook(features(news_z=1.5), NarrativePhase.CONFIRMED, coverage)
     assert plan.stance == "WATCH"
     assert plan.max_nav_pct == 0.0
@@ -107,7 +107,7 @@ def test_a_social_leg_that_is_not_live_can_never_produce_a_position(status: str)
 
 def test_social_risks_are_suppressed_when_the_social_leg_is_dark() -> None:
     coverage = live_coverage()
-    coverage[0] = SourceStatus(source="reddit", status="unavailable", detail="no credentials")
+    coverage[0] = SourceStatus(source="social", status="unavailable", detail="no authorized session")
     plan = build_playbook(features(unique_authors=0, social_count=0), NarrativePhase.WHISPER, coverage)
     # "0 distinct authors" is an absence of data, not a finding about the crowd.
     assert not any("distinct authors" in risk for risk in plan.risks)

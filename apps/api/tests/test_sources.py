@@ -5,8 +5,9 @@ from typing import Any
 
 import pytest
 
-from ape_alpha.sources import market, news, reddit
-from ape_alpha.sources.http import SourceError, cache
+from ape_alpha.markets import US
+from ape_alpha.sources import live_news, market, news, reddit, social
+from ape_alpha.sources.http import SourceError, SourceUnavailable, cache
 from ape_alpha.sources.naming import company_root
 
 
@@ -124,6 +125,114 @@ def test_reddit_normalizes_into_stable_fields() -> None:
     assert normalized["body_length"] == len("body text")
     assert normalized["url"].startswith("https://www.reddit.com/r/stocks")
     assert normalized["created_at"].tzinfo is not None
+
+
+def test_social_search_recognizes_an_explicit_ticker() -> None:
+    assert social._explicit_ticker("Why I still own $PLTR", "PLTR") is True
+
+
+@pytest.mark.asyncio
+async def test_webcmd_reddit_query_is_one_argument_and_filters_false_positives(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: tuple[str, ...] = ()
+
+    class Config:
+        webcmd_timeout_seconds = 12.0
+
+    async def fake_invoke(args: tuple[str, ...], **_: Any) -> list[dict[str, Any]]:
+        nonlocal captured
+        captured = args
+        return [
+            {
+                "id": "good",
+                "title": "PLTR valuation discussion",
+                "subreddit": "r/PLTR",
+                "author": "alice",
+                "created_utc": 1_780_000_000,
+                "url": "https://reddit.com/good",
+            },
+            {
+                "id": "noise",
+                "title": "Palantir fantasy character",
+                "subreddit": "r/fantasy",
+                "author": "bob",
+                "created_utc": 1_780_000_000,
+                "url": "https://reddit.com/noise",
+            },
+        ]
+
+    monkeypatch.setattr(social, "settings", lambda: Config())
+    monkeypatch.setattr(social, "invoke_json", fake_invoke)
+    result = await social._reddit_webcmd("PLTR", "Palantir Technologies Inc.", ("stocks",), "week", 10)
+    assert captured[2] == '$PLTR OR PLTR OR "Palantir"'
+    assert [post["id"] for post in result.posts] == ["good"]
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_falls_back_to_reddit_oauth(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Config:
+        social_mode = "auto"
+        reddit_enabled = True
+
+    async def unavailable(*_: Any, **__: Any) -> social.ProviderFetch:
+        raise SourceUnavailable("webcmd-reddit", "login required")
+
+    async def oauth(*_: Any, **__: Any) -> social.ProviderFetch:
+        return social.ProviderFetch("reddit-oauth", [])
+
+    monkeypatch.setattr(social, "settings", lambda: Config())
+    monkeypatch.setattr(social, "_reddit_webcmd", unavailable)
+    monkeypatch.setattr(social, "_reddit_oauth", oauth)
+    result = await social._reddit_auto("PLTR", "Palantir", ("stocks",), "week", 10)
+    assert result.provider == "reddit-oauth"
+
+
+@pytest.mark.asyncio
+async def test_empty_reddit_search_is_still_live_coverage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Config:
+        social_mode = "webcmd"
+
+    async def reddit_live(*_: Any, **__: Any) -> social.ProviderFetch:
+        return social.ProviderFetch("webcmd-reddit", [])
+
+    monkeypatch.setattr(social, "settings", lambda: Config())
+    monkeypatch.setattr(social, "_reddit_auto", reddit_live)
+    result = await social.fetch_mentions("PLTR", "Palantir", subreddits=("stocks",), limit=10)
+    assert result.provider == "webcmd-reddit"
+    assert result.detail == "webcmd-reddit 0"
+
+
+@pytest.mark.asyncio
+async def test_webcmd_news_runs_google_and_yahoo_for_each_query(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    class Config:
+        webcmd_timeout_seconds = 12.0
+
+    async def fake_invoke(args: tuple[str, ...], **_: Any) -> list[dict[str, Any]]:
+        calls.append(args)
+        provider = "google-news" if args[1] == "google-news" else "yahoo-news"
+        return [{
+            "title": f"Palantir story from {provider}",
+            "url": f"https://example.com/{provider}",
+            "publisher": "Example",
+            "createdAt": "2026-08-08T10:00:00Z",
+            "language": "en-US",
+            "country": "US",
+            "provider": provider,
+        }]
+
+    monkeypatch.setattr(live_news, "settings", lambda: Config())
+    monkeypatch.setattr(live_news, "invoke_json", fake_invoke)
+    result = await live_news.fetch_articles("PLTR", "Palantir Technologies Inc.", US)
+    assert {call[1] for call in calls} == {"google-news", "yahoo-news"}
+    assert result.provider == "webcmd-google-news + webcmd-yahoo-news"
+    assert {article["provider"] for article in result.articles} == {"google-news", "yahoo-news"}
 
 
 @pytest.mark.asyncio

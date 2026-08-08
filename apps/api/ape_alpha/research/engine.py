@@ -17,11 +17,11 @@ from ..contracts import (
 )
 from ..markets import Market
 from ..signals import CLASSIFIER_VERSION, SIGNAL_VERSION, classify_phase, phase_confidence
-from ..sources import google_news as google_source
+from ..sources import live_news as live_news_source
 from ..sources import market as market_source
 from ..sources import news as news_source
 from ..sources import nse as nse_source
-from ..sources import reddit as reddit_source
+from ..sources import social as social_source
 from ..sources import sec as sec_source
 from ..sources.http import SourceError, SourceUnavailable
 from .features import build_features
@@ -29,7 +29,7 @@ from .llm import groq_narrative, rules_narrative
 from .playbook import build_playbook
 from .resolve import Resolution, resolve
 
-DATASET_VERSION = "live-acquisition-v2"
+DATASET_VERSION = "live-acquisition-v4-webcmd-reddit-news"
 
 # Per-source wall-clock budget. Sources are fetched concurrently, so without a
 # cap the slowest one sets the latency of the whole run — and GDELT in
@@ -163,7 +163,7 @@ async def research(
 
     fetched = await asyncio.gather(
         _budgeted(
-            reddit_source.fetch_mentions(
+            social_source.fetch_mentions(
                 best.display_symbol, best.company, subreddits=profile.subreddits
             )
         ),
@@ -177,16 +177,40 @@ async def research(
             )
         ),
         _budgeted(filings_call),
-        _budgeted(google_source.fetch_articles(best.display_symbol, best.company, profile)),
+        _budgeted(live_news_source.fetch_articles(best.display_symbol, best.company, profile)),
         return_exceptions=True,
     )
 
-    posts, social_status = _unwrap(fetched[0], "reddit", "reddit-oauth")
+    social_result = fetched[0]
+    if isinstance(social_result, social_source.SocialFetch):
+        posts = social_result.posts
+        social_status = SourceStatus(
+            source="social",
+            status="live",
+            provider=social_result.provider,
+            events=len(posts),
+            detail=social_result.detail,
+        )
+    else:
+        posts, social_status = _unwrap(social_result, "social", "webcmd + reddit-oauth")
     gdelt_articles, gdelt_status = _unwrap(fetched[1], "news", "gdelt")
     timeline_result = fetched[2]
     timeline = timeline_result if isinstance(timeline_result, list) else []
     filings, filing_status = _unwrap(fetched[4], "filings", profile.filing_source)
-    google_articles, google_status = _unwrap(fetched[5], "news", "google-news")
+    live_news_result = fetched[5]
+    if isinstance(live_news_result, live_news_source.NewsFetch):
+        current_articles = live_news_result.articles
+        current_news_status = SourceStatus(
+            source="news",
+            status="live",
+            provider=live_news_result.provider,
+            events=len(current_articles),
+            detail=live_news_result.detail,
+        )
+    else:
+        current_articles, current_news_status = _unwrap(
+            live_news_result, "news", "webcmd-google-news + webcmd-yahoo-news"
+        )
 
     bars: list[market_source.Bar] = []
     price_provider = ""
@@ -207,14 +231,14 @@ async def research(
 
     posts = posts or []
     filings = filings or []
-    articles = merge_articles(gdelt_articles or [], google_articles or [])
+    articles = merge_articles(gdelt_articles or [], current_articles or [])
 
     # The news leg is live if either provider answered; the detail records which
     # ones did, because they contribute different things — Google supplies
     # recency and locale, GDELT supplies the historical baseline.
     providers = [
         name
-        for name, status in (("gdelt", gdelt_status), ("google-news", google_status))
+        for name, status in (("gdelt", gdelt_status), ("webcmd-current-news", current_news_status))
         if status.status == "live"
     ]
     if providers:
@@ -223,12 +247,12 @@ async def research(
             detail += "; no volume baseline, news z-score from daily counts"
         news_status = SourceStatus(
             source="news", status="live", provider=" + ".join(providers),
-            events=len(articles), detail=detail,
+            events=len(articles), detail=f"{detail}; {current_news_status.detail}" if current_news_status.detail else detail,
         )
     else:
         news_status = SourceStatus(
-            source="news", status="degraded", provider="gdelt + google-news",
-            detail=f"gdelt: {gdelt_status.detail}; google: {google_status.detail}",
+            source="news", status="degraded", provider="gdelt + webcmd-current-news",
+            detail=f"gdelt: {gdelt_status.detail}; webcmd news: {current_news_status.detail}",
         )
 
     features = build_features(
@@ -258,7 +282,9 @@ async def research(
             _event(
                 SourceType.SOCIAL, best.display_symbol, post["title"], post["url"], post["created_at"], ingested_at, 0.9,
                 {
-                    "subreddit": post["subreddit"],
+                    "platform": post.get("platform", "reddit"),
+                    "community": post.get("community", post.get("subreddit", "")),
+                    "subreddit": post.get("subreddit", ""),
                     "author": post["author"],
                     "score": post["score"],
                     "comments": post["comments"],
@@ -270,7 +296,12 @@ async def research(
         events.append(
             _event(
                 SourceType.NEWS, best.display_symbol, article["title"], article["url"], article["created_at"], ingested_at, 1.0,
-                {"domain": article["domain"], "language": article["language"], "country": article["country"]},
+                {
+                    "domain": article["domain"],
+                    "language": article["language"],
+                    "country": article["country"],
+                    "provider": article.get("provider", "gdelt"),
+                },
             )
         )
     for filing in filings:

@@ -18,6 +18,7 @@ from .repository import load_json, project_root
 from .research.engine import UnresolvedQuery, research
 from .research.resolve import resolve
 from .sources.http import SourceError
+from .sources.webcmd import configured as webcmd_configured, installed_commands
 from .store import append_snapshots, read_manifest, read_snapshots, row_from_result
 
 app = FastAPI(title="APE Alpha Research API", version="2.0.0")
@@ -52,6 +53,7 @@ def health() -> dict[str, Any]:
         "envFile": str(ENV_FILE) if ENV_FILE else None,
         "credentials": {
             "reddit": config.reddit_enabled,
+            "webcmd": webcmd_configured(),
             "alpaca": config.alpaca_enabled,
             "groq": config.groq_enabled,
         },
@@ -145,20 +147,46 @@ def manifest() -> dict[str, Any]:
 
 
 @app.get("/api/v1/source-health")
-def source_health() -> dict[str, Any]:
+async def source_health() -> dict[str, Any]:
     """What each acquisition leg can currently do, before any query is run."""
     config = settings()
+    commands: set[str] = set()
+    webcmd_error = ""
+    try:
+        commands = await installed_commands()
+    except (SourceError, SourceUnavailable) as exc:
+        webcmd_error = exc.detail
     return {
         "sources": [
             {
-                "source": "Reddit",
+                "source": "WebCMD Reddit",
+                "status": "ready" if "reddit/search" in commands else "unavailable",
+                "detail": "On-demand browser-session search; login is verified on each research run"
+                if "reddit/search" in commands
+                else webcmd_error or "Install the Reddit WebCMD adapter",
+            },
+            {
+                "source": "WebCMD Google News",
+                "status": "ready" if "ape-alpha/google-news" in commands else "unavailable",
+                "detail": "On-demand locale-aware current news via public RSS"
+                if "ape-alpha/google-news" in commands
+                else webcmd_error or "Install the APE Alpha WebCMD plugin",
+            },
+            {
+                "source": "WebCMD Yahoo News",
+                "status": "ready" if "ape-alpha/yahoo-news" in commands else "unavailable",
+                "detail": "On-demand ticker-related Yahoo Finance stories"
+                if "ape-alpha/yahoo-news" in commands
+                else webcmd_error or "Install the APE Alpha WebCMD plugin",
+            },
+            {
+                "source": "Reddit API fallback",
                 "status": "ready" if config.reddit_enabled else "unavailable",
-                "detail": "OAuth app-only, live window"
+                "detail": "Approved OAuth fallback"
                 if config.reddit_enabled
-                else "Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET",
+                else "Optional: set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET",
             },
             {"source": "GDELT news", "status": "ready", "detail": "Keyless, historical archive from 2017"},
-            {"source": "Google News", "status": "ready", "detail": "Keyless, locale-aware, current window only"},
             {"source": "SEC EDGAR", "status": "ready", "detail": "Keyless — US filings, acceptance timestamps"},
             {"source": "NSE announcements", "status": "ready", "detail": "Keyless — India corporate filings"},
             {

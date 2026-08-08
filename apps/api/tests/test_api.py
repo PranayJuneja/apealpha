@@ -32,13 +32,21 @@ def test_health_reports_which_credentials_are_present() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["mode"] == "paper-research"
-    assert set(body["credentials"]) == {"reddit", "alpaca", "groq"}
+    assert set(body["credentials"]) == {"reddit", "webcmd", "alpaca", "groq"}
 
 
 def test_source_health_lists_every_leg_with_a_status() -> None:
     sources = client.get("/api/v1/source-health").json()["sources"]
     names = {item["source"] for item in sources}
-    assert {"Reddit", "GDELT news", "SEC EDGAR", "Market bars"} <= names
+    assert {
+        "WebCMD Reddit",
+        "WebCMD Google News",
+        "WebCMD Yahoo News",
+        "Reddit API fallback",
+        "GDELT news",
+        "SEC EDGAR",
+        "Market bars",
+    } <= names
     assert all(item["status"] in {"ready", "unavailable"} for item in sources)
 
 
@@ -50,7 +58,7 @@ def test_keyless_sources_are_always_ready(monkeypatch: pytest.MonkeyPatch) -> No
     assert sources["GDELT news"]["status"] == "ready"
     assert sources["SEC EDGAR"]["status"] == "ready"
     assert sources["Market bars"]["status"] == "ready"
-    assert sources["Reddit"]["status"] == "unavailable"
+    assert sources["Reddit API fallback"]["status"] == "unavailable"
     config_module.reset_settings()
 
 

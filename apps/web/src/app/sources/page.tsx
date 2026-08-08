@@ -13,10 +13,16 @@ export const metadata: Metadata = {
 
 const SETUP = [
   {
-    source: "Reddit",
-    env: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"],
-    how: "Create a script or web app at reddit.com/prefs/apps. App-only OAuth, free tier, 100 requests per minute.",
+    source: "WebCMD Reddit",
+    env: [],
+    how: "Run `npm run webcmd -- reddit login` once and complete the login yourself. Each ticker query then searches that authorized session; APE Alpha receives normalized results, not your cookie or password.",
     without: "The social leg goes dark. Every gap metric becomes partial and no paper position can be sized.",
+  },
+  {
+    source: "Reddit API fallback",
+    env: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"],
+    how: "Optional only. Approved server-side OAuth is used when APE_SOCIAL_MODE=auto and the WebCMD Reddit session is unavailable.",
+    without: "Nothing while WebCMD Reddit is healthy. No API approval is needed for the primary pathway.",
   },
   {
     source: "Alpaca",
@@ -31,10 +37,10 @@ const SETUP = [
     without: "Deterministic rule-written narrative is used instead. The stance is unaffected either way.",
   },
   {
-    source: "Google News",
+    source: "WebCMD Google + Yahoo News",
     env: [],
-    how: "Keyless and locale-aware. Supplies the current news window in the market's own language and region, so Indian listings return Indian press.",
-    without: "No setup is required. It has no archive, so GDELT still supplies the historical baseline; transient source failures are reported as degraded coverage.",
+    how: "Both current-news commands run for every resolved ticker. Google is locale-aware; Yahoo is independently filtered against the visible headline. No news login or API key is required.",
+    without: "No setup is required. Either provider can keep the current-news leg live; GDELT supplies the historical baseline and every partial failure is disclosed.",
   },
   {
     source: "GDELT, SEC EDGAR and NSE",
@@ -58,7 +64,7 @@ export default async function SourcesPage() {
       <PageHero
         eyebrow="Source health"
         title={<>Every leg, and what happens when one goes dark.</>}
-        sub="No credential is required to run the engine. Each missing key disables exactly one source and is reported rather than silently zeroed."
+        sub="No Reddit API approval is required. The authorized WebCMD session and every keyless provider are reported explicitly rather than silently zeroed."
       />
 
       <section className="section-shell py-16 md:py-24">

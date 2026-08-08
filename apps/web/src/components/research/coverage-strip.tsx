@@ -7,6 +7,7 @@ const TONE = {
 } as const;
 
 const LABEL = {
+  social: "Reddit",
   reddit: "Reddit",
   news: "News",
   price: "Price",

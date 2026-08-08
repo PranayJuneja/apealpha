@@ -25,7 +25,7 @@ export function ResultView({ result }: { result: ResearchResult }) {
   // A dark social leg leaves social_z at an unmeasured zero. Rendering that as
   // a value would invert the reading, so those tiles show "—" instead.
   const socialMeasured = result.coverage.some(
-    (status) => status.source === "reddit" && status.status === "live",
+    (status) => ["social", "reddit"].includes(status.source) && status.status === "live",
   );
 
   return (

@@ -3,6 +3,17 @@ import type { SourceEvent } from "@/types/research";
 
 const INITIAL_ROWS = 24;
 
+function eventSourceLabel(event: SourceEvent): string {
+  if (event.source_type === "social") return "REDDIT";
+  if (event.source_type === "news") {
+    const provider = String(event.metadata.provider ?? "").toLowerCase();
+    if (provider.includes("google")) return "GOOGLE";
+    if (provider.includes("yahoo")) return "YAHOO";
+    if (provider.includes("gdelt")) return "GDELT";
+  }
+  return sourceLabel(event.source_type);
+}
+
 function EventRows({ events, first }: { events: SourceEvent[]; first: string }) {
   return events.map((event) => (
     <li key={event.event_id} className="border-b border-line">
@@ -13,7 +24,7 @@ function EventRows({ events, first }: { events: SourceEvent[]; first: string }) 
         className="grid gap-2 py-5 transition-colors hover:bg-white/70 sm:grid-cols-[7rem_1fr_auto] sm:items-baseline sm:gap-6 sm:px-2"
       >
         <span className={`source-chip source-${event.source_type}`}>
-          {sourceLabel(event.source_type)}
+          {eventSourceLabel(event)}
         </span>
         <span className="text-[15px] leading-6 text-ink">{event.title}</span>
         <span className="tabular text-right text-xs text-muted">

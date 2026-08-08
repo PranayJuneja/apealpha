@@ -18,7 +18,9 @@
     "backfill": "python -m ape_alpha.cli backfill",
     "manifest": "python -m ape_alpha.cli manifest",
     "backtest": "python -m ape_alpha.cli backtest --locked",
-    "webcmd:validate": "webcmd validate ./plugins/ape-alpha"
+    "webcmd": "powershell -ExecutionPolicy Bypass -File scripts/webcmd.ps1",
+    "webcmd:setup:arm64": "powershell -ExecutionPolicy Bypass -File scripts/setup-webcmd-windows-arm64.ps1",
+    "webcmd:validate": "npm run webcmd -- validate ./plugins/ape-alpha"
   },
   "devDependencies": {
     "playwright-core": "^1.61.1",

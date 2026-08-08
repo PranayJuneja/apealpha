@@ -12,7 +12,7 @@ function stagesFor(market: MarketCode) {
   const filings = market === "US" ? "EDGAR" : "NSE announcements";
   return [
     { at: 0, label: `Resolving the symbol against the ${venue}…` },
-    { at: 1800, label: `Reading Reddit, GDELT and ${filings} concurrently…` },
+    { at: 1800, label: `Searching Reddit, Google News, Yahoo News and ${filings} through the live pipeline…` },
     { at: 6000, label: "Standardizing each layer and scoring the narrative gap…" },
     { at: 11000, label: "Building the paper playbook…" },
   ];
@@ -87,7 +87,7 @@ export function SearchConsole() {
             <div className="mt-9 border-t border-line pt-6 text-sm leading-6 text-muted">
               <p>
                 A symbol, a cashtag or a company name. The engine resolves it against the selected
-                market&apos;s listing universe, then reads Reddit, world news, filings and price for that
+                market&apos;s listing universe, then searches Reddit, Google News, Yahoo News, filings and price for that
                 specific security.
               </p>
               <p className="mt-3">
@@ -177,7 +177,7 @@ export function SearchConsole() {
               <p id="query-hint" role="status" aria-live="polite" className="max-w-sm text-xs leading-5 text-muted">
                 {busy
                   ? stages[stage].label
-                  : `Reddit, GDELT news, ${active.filings} and market bars, fetched live.`}
+                    : `WebCMD Reddit, Google/Yahoo News, ${active.filings} and market bars, fetched live.`}
               </p>
             </div>
 

@@ -1,0 +1,20 @@
+{
+  "news": [
+    {
+      "title": "Palantir shares climb after earnings",
+      "publisher": "Reuters",
+      "link": "https://finance.yahoo.com/news/palantir-earnings.html",
+      "providerPublishTime": 1786176000,
+      "type": "STORY",
+      "relatedTickers": ["PLTR"]
+    },
+    {
+      "title": "Broad market closes higher",
+      "publisher": "Example",
+      "link": "https://finance.yahoo.com/news/market.html",
+      "providerPublishTime": 1786175000,
+      "type": "STORY",
+      "relatedTickers": ["PLTR"]
+    }
+  ]
+}

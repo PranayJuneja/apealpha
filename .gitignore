@@ -14,3 +14,4 @@ apps/api/.venv/
 coverage/
 playwright-report/
 test-results/
+.tools/

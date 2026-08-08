@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ApiOffline, ApiTimeout, runResearch } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
-// A cold run fans out to Reddit, GDELT, EDGAR and a price provider, and a
+// A cold run fans out through WebCMD Reddit/Google/Yahoo plus GDELT, EDGAR and a price provider, and a
 // widely-covered name can legitimately take a while.
 export const maxDuration = 150;
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>Palantir wins new defense contract - Reuters</title>
+    <link>https://news.google.com/rss/articles/palantir</link>
+    <pubDate>Fri, 08 Aug 2026 10:00:00 GMT</pubDate>
+    <source url="https://reuters.com">Reuters</source>
+  </item>
+  <item>
+    <title>Fantasy character named Palantir returns - Example</title>
+    <link>https://news.google.com/rss/articles/fantasy</link>
+    <pubDate>Fri, 08 Aug 2026 09:00:00 GMT</pubDate>
+    <source url="https://example.com">Example</source>
+  </item>
+</channel></rss>
