@@ -1,0 +1,15 @@
+[
+  {
+    "eventId": "ir_12345678901234567890",
+    "sourceType": "ir",
+    "ticker": "ASTS",
+    "title": "AST SpaceMobile publishes a deployment update",
+    "sourceUrl": "https://investors.example.com/releases/deployment",
+    "sourceCreatedAt": "2026-08-07T12:30:00.000Z",
+    "sourceFirstSeenAt": "2026-08-07T12:31:00.000Z",
+    "ingestedAt": "2026-08-07T12:31:00.000Z",
+    "tickerConfidence": 1,
+    "rawContentHash": "1234567890123456789012345678901234567890123456789012345678901234",
+    "metadata": "{\"host\":\"investors.example.com\"}"
+  }
+]

@@ -1,0 +1,329 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f7f8f5;
+  --surface: #ffffff;
+  --ink: #111814;
+  --muted: #64706a;
+  --line: #dfe5df;
+  --line-strong: #c8d1c9;
+  --solar: #f6b817;
+  --solar-soft: #fff3bd;
+  --blue: #165dff;
+  --blue-soft: #eaf0ff;
+  --green: #0d6b46;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Market semantics. The Celron system has no notion of up/down, and finance
+     cannot be read without it, so these two are the only additions. */
+  --up: #0d6b46;
+  --up-soft: #e4f2eb;
+  --down: #b3341f;
+  --down-soft: #fdeae5;
+}
+
+@theme inline {
+  --color-bg: var(--paper);
+  --color-bg2: var(--surface);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink2: #26322b;
+  --color-sun: var(--solar);
+  --color-sunlight: #ffd65a;
+  --color-ember: #df8b00;
+  --color-volt: var(--blue);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-muted: var(--muted);
+  --color-mist: var(--muted);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --font-sans: var(--font-manrope), "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--paper); }
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--solar-soft); color: var(--ink); }
+
+.h-display {
+  font-family: var(--font-sans);
+  font-weight: 610;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.section-rule { border-top: 1px solid var(--line); }
+.section-shell { width: min(100% - 2.5rem, 90rem); margin-inline: auto; }
+
+.glass,
+.glass-soft,
+.glass-sun {
+  border: 1px solid rgba(17, 24, 20, 0.1);
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 50px rgba(17, 24, 20, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+.glass { background: rgba(255, 255, 255, 0.9); }
+.glass-soft { background: linear-gradient(145deg, #fff 0%, var(--blue-soft) 100%); }
+.glass-sun { border-color: #ecd46b; background: linear-gradient(145deg, #fffdf4 0%, var(--solar-soft) 100%); }
+
+.button-primary,
+.button-secondary {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  transition: transform 150ms var(--ease-out), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+.button-primary { background: var(--ink); color: white; }
+.button-secondary { border: 1px solid var(--line-strong); background: white; color: var(--ink); }
+.button-primary:active,
+.button-secondary:active { transform: scale(0.97); }
+.button-primary:disabled { background: var(--muted); cursor: wait; }
+
+.hero-cta {
+  display: inline-flex;
+  min-height: 3.15rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  padding: 0.8rem 1.3rem;
+  font-size: 0.86rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  transition: transform 150ms var(--ease-out), background-color 180ms ease, border-color 180ms ease;
+}
+.hero-cta-primary { background: white; color: var(--ink); }
+.hero-cta-secondary { border: 1px solid rgba(255, 255, 255, 0.5); background: rgba(17, 24, 20, 0.2); color: white; backdrop-filter: blur(12px); }
+.hero-cta:active { transform: scale(0.97); }
+
+.editorial-link { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; }
+.editorial-link::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -4px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms var(--ease-out);
+}
+
+.nav-cta { transition: transform 160ms var(--ease-out), background-color 180ms ease; }
+.nav-cta:active { transform: scale(0.97); }
+
+@media (hover: hover) and (pointer: fine) {
+  .button-primary:hover:not(:disabled) { background: var(--blue); }
+  .button-secondary:hover { border-color: var(--ink); }
+  .nav-cta:hover { background: var(--blue); }
+  .editorial-link:hover::after { transform: scaleX(1); transform-origin: left; }
+  .hero-cta-primary:hover { background: var(--solar); }
+  .hero-cta-secondary:hover { border-color: white; background: rgba(255, 255, 255, 0.16); }
+}
+
+.hero-line {
+  opacity: 0;
+  transform: translateY(22px);
+  animation: hero-in 720ms var(--ease-out) 80ms forwards;
+}
+@keyframes hero-in { to { opacity: 1; transform: translateY(0); } }
+
+.home-hero-overlay {
+  background:
+    linear-gradient(90deg, rgba(8, 15, 12, 0.82) 0%, rgba(8, 15, 12, 0.6) 42%, rgba(8, 15, 12, 0.12) 76%),
+    linear-gradient(0deg, rgba(8, 15, 12, 0.46) 0%, transparent 42%);
+}
+
+.site-header {
+  backdrop-filter: blur(18px);
+  transition: background-color 220ms ease, border-color 220ms ease;
+}
+.site-nav-shell {
+  overflow: clip;
+  transform-origin: top center;
+  transition: transform 260ms var(--ease-out), background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, border-radius 320ms var(--ease-out);
+}
+.site-header[data-scrolled="true"],
+.site-header[data-home="true"] {
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+}
+.site-header[data-scrolled="true"] .site-nav-shell,
+.site-header[data-home="true"] .site-nav-shell {
+  transform: translateY(12px) scale(0.975);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  background: rgba(247, 248, 245, 0.9);
+  box-shadow: 0 18px 46px rgba(17, 24, 20, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(40px) saturate(175%);
+  -webkit-backdrop-filter: blur(40px) saturate(175%);
+}
+.site-header[data-scrolled="true"][data-open="true"] .site-nav-shell,
+.site-header[data-home="true"][data-open="true"] .site-nav-shell { border-radius: 1.6rem; }
+
+.site-mobile-menu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 340ms var(--ease-out);
+}
+.site-mobile-menu-inner {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 340ms;
+}
+.site-header[data-open="true"] .site-mobile-menu { grid-template-rows: 1fr; }
+.site-header[data-open="true"] .site-mobile-menu-inner { visibility: visible; }
+
+/* ---- Research console -------------------------------------------------- */
+
+/* The ticker entry borrows the Celron calculator's oversized numeric field:
+   one obvious thing to type, nothing competing with it. */
+.ticker-field {
+  width: 100%;
+  min-height: 4.75rem;
+  padding-block: 0.5rem;
+  padding-right: 7.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  font-weight: 600;
+  letter-spacing: -0.07em;
+  text-transform: uppercase;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.ticker-field::placeholder { color: #9ca69f; opacity: 1; text-transform: none; letter-spacing: -0.04em; }
+.ticker-field:focus { border-color: var(--blue); box-shadow: 0 1px 0 var(--blue); }
+
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  padding: 0.32rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.phase-up { color: var(--up); background: var(--up-soft); }
+.phase-warn { color: var(--ember, #df8b00); background: var(--solar-soft); }
+.phase-down { color: var(--down); background: var(--down-soft); }
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.tabular { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.text-up { color: var(--up); }
+.text-down { color: var(--down); }
+
+/* Evidence tape: dots on a rule, revealed in source order. */
+.tape-track { position: relative; height: 7rem; }
+.tape-rule { position: absolute; top: 1.5rem; left: 0; right: 0; height: 1px; background: var(--line-strong); }
+.tape-node {
+  position: absolute;
+  top: 1rem;
+  width: 6rem;
+  margin-left: -0.5rem;
+  opacity: 0.22;
+  transform: translateY(4px);
+  transition: opacity 340ms var(--ease-out), transform 340ms var(--ease-out);
+}
+.tape-node.is-visible { opacity: 1; transform: translateY(0); }
+.tape-dot {
+  display: block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: var(--blue);
+  box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px currentColor;
+}
+.source-social .tape-dot, .source-social.source-chip { background: var(--blue); }
+.source-news .tape-dot, .source-news.source-chip { background: var(--solar); }
+.source-filing .tape-dot, .source-filing.source-chip,
+.source-ir .tape-dot, .source-ir.source-chip { background: var(--green); }
+.source-market .tape-dot, .source-market.source-chip { background: var(--ink); }
+
+.source-chip {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.source-news.source-chip { color: var(--ink); }
+
+.progress-rail { height: 2px; width: 100%; overflow: hidden; background: var(--line); border-radius: 999px; }
+.progress-rail span { display: block; height: 100%; background: var(--blue); transition: width 420ms var(--ease-out); }
+
+input, textarea, button, select { font: inherit; }
+input:not([type="range"]), textarea, select {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--solar);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .section-shell { width: min(100% - 2rem, 90rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

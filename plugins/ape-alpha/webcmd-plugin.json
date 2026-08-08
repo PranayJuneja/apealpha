@@ -1,0 +1,9 @@
+{
+  "name": "ape-alpha",
+  "version": "0.1.0",
+  "description": "Point-in-time financial narrative acquisition commands",
+  "webcmd": ">=0.5.3",
+  "author": {
+    "name": "APE Alpha"
+  }
+}

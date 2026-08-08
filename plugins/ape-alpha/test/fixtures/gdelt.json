@@ -1,0 +1,13 @@
+{
+  "articles": [
+    {
+      "url": "https://news.example.com/apple-event",
+      "title": "Apple announces a research catalyst",
+      "seendate": "20260807T143000Z",
+      "domain": "news.example.com",
+      "language": "English",
+      "sourcecountry": "United States",
+      "socialimage": ""
+    }
+  ]
+}

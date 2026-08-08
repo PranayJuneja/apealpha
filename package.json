@@ -1,0 +1,27 @@
+{
+  "name": "ape-alpha",
+  "private": true,
+  "version": "0.2.0",
+  "packageManager": "npm@11.6.2",
+  "workspaces": ["apps/web", "plugins/ape-alpha"],
+  "scripts": {
+    "dev": "npm run dev --workspace @ape-alpha/web",
+    "build": "npm run build --workspace @ape-alpha/web",
+    "lint": "npm run lint --workspace @ape-alpha/web",
+    "test:web": "npm run test --workspace @ape-alpha/web",
+    "test:adapters": "npm run test --workspace @ape-alpha/webcmd-plugin",
+    "test:api": "python -m pytest apps/api/tests -q",
+    "test": "npm run test:web && npm run test:adapters && npm run test:api",
+    "verify:browser": "node scripts/verify-browser.mjs",
+    "api": "python -m ape_alpha.api",
+    "research": "python -m ape_alpha.cli research",
+    "backfill": "python -m ape_alpha.cli backfill",
+    "manifest": "python -m ape_alpha.cli manifest",
+    "backtest": "python -m ape_alpha.cli backtest --locked",
+    "webcmd:validate": "webcmd validate ./plugins/ape-alpha"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.61.1",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,16 @@
+.env
+.env.local
+node_modules/
+.next/
+dist/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+*.tsbuildinfo
+*.duckdb
+data/derived/
+apps/api/.venv/
+coverage/
+playwright-report/
+test-results/
