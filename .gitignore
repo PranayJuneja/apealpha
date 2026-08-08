@@ -15,3 +15,5 @@ coverage/
 playwright-report/
 test-results/
 .tools/
+artifacts/*-dev.log
+artifacts/*-dev-error.log
